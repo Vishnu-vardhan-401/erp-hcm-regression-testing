@@ -1,0 +1,4847 @@
+package PageObject;
+import java.util.List;
+import java.util.Set;
+
+import org.openqa.selenium.By;
+import org.openqa.selenium.Keys;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+import org.testng.Assert;
+
+import Utilities.AllureReportUtil;
+import Utilities.ExcelReader;
+import Utilities.ScenarioContext;
+import Utilities.Wrapper;
+
+public class HCMCoreHR {
+    WebDriver driver;
+    String userName;
+    String passWord;
+
+    String EXCEL_PATH = "src/test/resources/TestData/OracleHCM_NEW.xlsx";
+    String SHEET_NAME = "CoreHR";
+    String KEY_COLUMN_HEADER = "Test Case"; 
+
+    public HCMCoreHR(WebDriver driver){
+        this.driver=driver;
+    }
+
+    private String getCurrentTestCaseKey() {
+        String key = ScenarioContext.getTestCaseKey();
+        if (key == null || key.isBlank()) {
+            throw new IllegalStateException("Test case key is not set. Check Hooks @Before.");
+        }
+        return key;
+    }
+    String currentScenarioTag= getCurrentTestCaseKey();
+
+    private void attachStepEvidence(String stepName) {
+        AllureReportUtil.attachScreenshot(driver, "Step screenshot - " + stepName);
+    }
+
+
+    //Login Page
+    By xpath_UserName= By.xpath("//input[contains(@id, 'username')]");
+    By xpath_Password=By.xpath("//input[contains(@id, 'password')]");
+    By xpath_SigninButton=By.xpath("//*[text()='Sign In']");
+
+    //Test ID:1279843-->ESS - Family and Emergency Contacts
+    // By xpath_subtitle = By.xpath("//*[text()='Me']");
+    // By xpath_QuickActionsSubtitle = By.xpath("//*[text()='Quick Actions']");
+    By xpath_FamilyandEmergencyAction = By.xpath("//a[text()='Family and Emergency Contacts']");
+    By xpath_FamilyandEmergencyPageValidation=By.xpath("//h1[text()='Family and Emergency Contacts']");
+    By xpath_MyContactsTitle = By.xpath("//*[text()='My contacts']");
+    By xpath_AddIcon = By.xpath("//*[text()='My contacts']//following-sibling::div");
+    //selecting coworker option 
+    // By xpath_CoworkerOption = By.xpath("//oj-dialog[contains(@dialog-title,'whatWouldYouLikeToDo')]//child::oj-radioset//span[contains(@class,'enabled oj-selected')]");
+    By xpath_SelectCoworkerAsContact=By.xpath("//oj-option[contains(text(),'Select a Coworker as a Contact')]");
+    By xpath_CreateNewContact=By.xpath("//input[contains(@id,'create-new-contact-option')]");
+    By xpath_ContinueButton=By.xpath("//*[text()='Continue']");
+    
+    //Basic Info-->Global Name
+    By xpath_LastName=By.xpath("//input[contains(@id,'Last Name|input')]");
+    By xpath_FirstName=By.xpath("//input[contains(@id,'First Name')]");
+    By xpath_Suffix=By.xpath("//input[contains(@id,'Suffix')]");
+    By xpath_MiddleName=By.xpath("//input[contains(@id,'Middle Name')]");
+    
+    //Basic Info-->Relationship
+    By xpath_Relationship=By.xpath("//oj-select-single[contains(@id,'contact-relationship-contact')]//span/span"); ////oj-input-text[@label-hint='Relationship']//input[contains(@id,'contact-relationship-contact')]  //oj-select-single[contains(@id,'contact-relationship-contact')]//div[1]//span/a
+
+    public By xpath_RelationshipDropDownValues(String reasonText) {
+        String xpath = "//div[contains(@id,'contact-relationship')]//ul/li//span[contains(text(),'xxx')]";
+        xpath = xpath.replace("xxx", reasonText);
+        return By.xpath(xpath);
+    }
+
+    By xpath_RelationshipSD=By.xpath("//*[contains(@id,'relationship-start')]//*[contains(@title,'Select Date')]");
+    
+    By xpath_Gender=By.xpath("//oj-select-single[contains(@id,'contact-relationship-gender')]//span/span");
+
+    By xpath_RDOB=By.xpath("//oj-input-date[contains(@id,'relationship-date-of-birth-input-date')]//span/span");
+
+    // By xpath_RelationshipEmergencyContact=By.xpath("(//*[text()='This person is an emergency contact']/../../../following-sibling::div//div)[2]");
+    By xpath_RelationshipPrimaryEmergencyContact=By.xpath("//oj-switch[contains(@id,'primary-contact')]//div[contains(@aria-labelledby,'primary-contact')]");
+    By xpath_TinType=By.xpath("//oj-select-single[contains(@id,'tinType')]//span/span");
+    public By xpath_TinTypeList(String reasonText) {
+        String xpath = "//ul[contains(@aria-labelledby,'tinType')]/li//div/span[text()='xxx']";
+        xpath = xpath.replace("xxx", reasonText);
+        return By.xpath(xpath);
+    }
+
+    By xpath_TinNumber=By.xpath("//input[contains(@id,'tinNumber')]");
+    By xpath_BenefitsOfferedConditionally=By.xpath("//oj-select-single[contains(@id,'benefitsOffered')]//span/span");
+    public By xpath_BenefitsOfferedConditionallyList(String reasonText) {
+        String xpath = "//ul[contains(@aria-labelledby,'benefitsOffered')]/li//div/span[contains(text(),'xxx')]";
+        xpath = xpath.replace("xxx", reasonText);
+        return By.xpath(xpath);
+    }
+    // By xpath_EmergencyContactNotes=By.xpath("//*[text()='Emergency Contact Notes']/../../../following-sibling::*");
+    
+    //Basic Info-->Phone Details
+    By xpath_PhoneCountryCode=By.xpath("//oj-select-single[contains(@id,'phone-country')]//span/span");
+    // By xpath_PhoneCountryCodeList=By.xpath("//oj-list-view//ul[@aria-label='Country']//li");
+    //ul[contains(@aria-label,'Country')]/li//oj-highlight-text/span[text()='US']
+    By xpath_PhoneCountryCodeManual=By.xpath("//input[contains(@id,'filter-phone-country')]");
+    public By xpath_PhoneCountryCodeList(String reasonText) {
+        String xpath = "//ul[contains(@aria-label,'Country')]/li//oj-highlight-text/span[text()='xxx']";
+        xpath = xpath.replace("xxx", reasonText);
+        return By.xpath(xpath);
+    }
+    By xpath_PhoneType=By.xpath("//oj-select-single[contains(@id,'person-phone-type')]//span/span");
+
+    public By xpath_PhoneTypeList(String reasonText) {
+        String xpath = "//oj-list-view//ul[contains(@aria-labelledby,'person-phone-type')]//li//span[contains(text(),'xxx')]";
+        xpath = xpath.replace("xxx", reasonText);
+        return By.xpath(xpath);
+    }
+    
+    By xpath_PhoneAreaCode=By.xpath("//input[contains(@id,'AreaCode')]");
+    By xpath_PhoneNumber=By.xpath("//input[contains(@id,'PhoneNumber')]");
+    // By xpath_PhoneExtension=By.xpath("");
+    // By xpath_PhoneFromDate=By.xpath("");
+    // By xpath_PhoneToDate=By.xpath("");
+
+    //Basic Info-->Email Details
+    By xpath_EmailType=By.xpath("//oj-select-single[contains(@id,'person-emails')]//span/span");
+    // By xpath_EmailTypeList=By.xpath("//ul[contains(@aria-labelledby,'person-emails')]//li");
+    public By xpath_EmailTypeList(String reasonText){
+        String xpath="//oj-list-view//ul[contains(@aria-labelledby,'person-emails')]//li//span[contains(text(),'xxx')]";
+        xpath = xpath.replace("xxx", reasonText);
+        return By.xpath(xpath);
+    }
+    By xpath_Email=By.xpath("//input[contains(@id,'EmailAddress')]");
+    
+    //Basic Info-->Address
+    By xpath_AddressType=By.xpath("//input[contains(@value,'useMyAddress')]");
+    By xpath_Address=By.xpath("//oj-select-single[contains(@id,'relatedPersonAddressLOV')]//span/span");
+    By xpath_AddressValue=By.xpath("(//oj-list-view[contains(@id,'relatedPersonAddress')]//ul/li)[1]");
+
+    //Basic Info-->National Identifiers 
+    By xpath_NICountry=By.xpath("//oj-select-single[contains(@id,'national-identifier')]//span/span");
+    By xpath_NICountryManual=By.xpath("//input[contains(@id,'filter-nid-country')]");
+    public By xpath_NICountryList(String reasonText){
+        String xpath="//ul[contains(@aria-label,'Country')]/li//oj-highlight-text/span[text()='xxx']";
+        xpath = xpath.replace("xxx", reasonText);
+        return By.xpath(xpath);
+    }
+
+    By xpath_NIType=By.xpath("//oj-select-single[contains(@id,'NationalIdentifierType')]//span/span");
+    public By xpath_NITypeList(String reasonText){
+        String xpath="//oj-list-view[contains(@id,'NationalIdentifierType')]//li//span[text()='xxx']";
+        xpath = xpath.replace("xxx", reasonText);
+        return By.xpath(xpath);
+    }
+
+    By xpath_NIID=By.xpath("//label[contains(text(),'National ID')]/parent::div/child::div/input");
+    By xpath_NIIssueDate=By.xpath("//oj-input-date[contains(@id,'IssueDate')]//span[contains(@title,'Select Date')]");
+    By xpath_NIExpirationDate=By.xpath("//oj-input-date[contains(@id,'ExpirationDate')]//span[contains(@title,'Select Date')]");
+
+    //Co-Worker Contact
+    By xpath_CoworkerPageValidation=By.xpath("//*[text()='Search coworker']");
+    By xpath_HRAdminCoworkerPageValidation=By.xpath("//h2[text()='Search person']");
+    By xpath_CoworkerRelationshipStartDate=By.xpath("//oj-input-date[contains(@id,'start-date')]//span[contains(@title,'Select Date')]");
+    
+    By xpath_CoworkerSearch=By.xpath("//oj-select-single[contains(@id,'coworker-contacts-lov')]//span/span");
+    By xpath_CoworkerSearchManual=By.xpath("//input[contains(@id,'filter-coworker-contacts')]");
+    public By xpath_CoworkerSearchList(String reasonText){
+        String xpath= "//ul[contains(@aria-label,'Search for a')]//li//span/span[contains(text(),'xxx')]";
+        xpath = xpath.replace("xxx", reasonText);
+        return By.xpath(xpath);
+    }
+
+    By xpath_CoworkerRelationship=By.xpath("//oj-select-single[contains(@id,'coworker-create')]//span/span");
+    public By xpath_CoworkerRelationshipList(String reasonText){
+        String xpath="//div[contains(@id,'coworker-create')]//ul/li//span[contains(text(),'xxx')]";
+        xpath = xpath.replace("xxx", reasonText);
+        return By.xpath(xpath);
+    }
+
+    By xpath_CoworkerEmergencyContactNotes=By.xpath("//input[contains(@id,'emergencyContactNotes')]");
+    //Submit Button
+    By xpath_SubmitButton=By.xpath("//button//div/span[text()='Submit']");
+
+    // Test ID: 1279865-->ESS - Compensation - View My Compensation
+    //show more
+    By xpath_ShowMore=By.xpath("(//*[text()='Show More'])[1]");
+    
+    //show less
+    By xpath_ShowLess=By.xpath("(//*[text()='Show Less'])[1]");
+    
+    //compensation
+    By xpath_Compensation=By.xpath("//*[text()='Compensation']");
+    
+    //My compensation link
+    By xpath_MyCompensation=By.xpath("//*[text()='My Compensation']");
+
+    //current salary
+    By xpath_CurrentSalary=By.xpath("//*[text()='Current salary']");
+
+    //salary
+    By xpath_Salary=By.xpath("//*[text()='Current salary']/../following-sibling::*//*[text()='Salary']/../../following-sibling::*");
+
+    //Adjustment
+    By xpath_Adjustment=By.xpath("//*[text()='Current salary']/../following-sibling::*//*[text()='Adjustment']/../../../following-sibling::*");
+
+    //Effective period
+    By xpath_EffectivePeriod=By.xpath("//*[text()='Current salary']/../following-sibling::*//*[text()='Effective Period']/../../../following-sibling::*/div");
+
+    //Component
+    By xpath_Component=By.xpath("//*[text()='Current salary']/../following-sibling::*//*[text()='Component']");
+
+    //Percentage
+    By xpath_Percentage=By.xpath("//*[text()='Current salary']/../following-sibling::*//*[text()='Percentage (%)']");
+    
+    //Profile
+    // By xpath_Profile=By.xpath("(//*[@aria-label='Notifications']/../../../../../following-sibling::*)[2]");
+    By xpath_Profile=By.xpath("//a[contains(@title,'Settings and Actions')]");
+    
+    //Sign Out
+    By xpath_SignOut=By.xpath("//a[text()='Sign Out']");
+
+ 
+    // Test ID: 1279871-->ESS - Retirement or Journey
+    //show more
+    // By xpath_ShowMore=By.xpath("(//*[text()='Show More'])[1]");
+ 
+    //show less
+    // By xpath_ShowLess=By.xpath("(//*[text()='Show Less'])[1]");
+    
+    // employement
+    // By xpath_Employment=By.xpath("//*[text()='Employment']");
+
+    // retirement 
+    By xpath_ResignationRetirement=By.xpath("//div[contains(@id,'show_more_groupNode_my_information')]//a[text()='Resignation/Retirement']");
+
+    // notification date
+    // By xpath_ResignationNotificationDate=By.xpath("(//*[text()='Resignation Notification Date']/../../../../following-sibling::*/*)[1]");
+
+    // notification date value
+    // By xpath_ResignationNotificationDateValue=By.xpath("//tbody//a[@role='button']");
+
+    // retirement date
+    By xpath_ResignationRetirementDate=By.xpath("(//*[text()='Resignation/Retirement Date']/../../../../following-sibling::*/*)[1]");
+
+    // retirement date value
+    By xpath_ResignationRetirementDateValue=By.xpath("//tbody//a[@role='button']");
+
+    By xpath_SelectMonthAndYear=By.xpath("//table[@data-handler='calendarKey']//td[contains(@data-handler,'selectYear')]/a");
+    
+    By xpath_DatePickerYear=By.xpath("//div//a[contains(@data-handler,'selectYearHeader')]");
+    By xpath_DatePickerMonth=By.xpath("//div/a[contains(@data-handler,'selectMonthHeader')]");
+    By xpath_DatePickerNext=By.xpath("(//a[@aria-label='Next'])[1]");
+    By xpath_DatePickerPrevious=By.xpath("(//a[@aria-label='Previous'])[1]");
+    
+    //Resignation/Retirement Action
+    By xpath_ResignationRetirementAction=By.xpath("//oj-select-single[contains(@id,'TerminationActionId')]//span/span");
+
+    //Resignation/Retirement Reason
+    By xpath_ResignationRetirementReason=By.xpath("//oj-select-single[contains(@id,'TerminationActionReasonId')]//span/span");
+    
+    By xpath_ResignationRetirementReasonnValidation=By.xpath("//oj-list-view[contains(@id,'listviewWR')]//span");
+
+    // continue
+    By xpath_Continue=By.xpath("//button[contains(@aria-label,'Continue')]");
+
+    // submit
+    By xpath_Submit=By.xpath("//button[contains(@aria-label,'Submit')]");
+
+    
+    // Test CaseID: 1279873	ESS - Resignation or Journey
+    
+    // Resign from employment:
+    // By xpath_ResignFromEmployment = By.xpath("//*[text()='Resign from Employment']");
+
+    // Resignation action
+    // By xpath_ResignationAction = By.xpath("(//*[text()='Resignation/Retirement Action'])[1]/../../../../following-sibling::*/*");
+
+
+    /**
+	 *Login method used for logging into Oracle HCM Application
+      by retrieving credentials from Excel.
+     * Scripted By:gaddem[Gadde Madhukar]  
+	**/
+    public void enterCredentials() throws Exception{
+        try {
+            Thread.sleep(5000);
+            userName = ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Username");
+            passWord = ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Password");
+            Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_UserName), userName, false);
+            Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_Password), passWord, false);   
+            Thread.sleep(5000);
+        }catch(Exception e) {
+            e.printStackTrace();
+            throw new Exception("Error entering credentials: " + e.getMessage());
+        } 
+    }
+
+    /**
+     * Open the dashboard page after successful login.
+     * Scripted By:gaddem[Gadde Madhukar]
+     */
+    public void openDashboardPage() throws Exception{
+        try {
+            Thread.sleep(5000);
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_SigninButton));
+            Thread.sleep(5000);
+            // if(driver.findElement(xpath_UserName).isDisplayed()) {
+            //     userName = ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Username");
+            //     passWord = ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Password");
+            //     Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_UserName), userName, false);
+            //     Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_Password), passWord, false);   
+            //     Thread.sleep(5000);
+            //     Wrapper.clickWebElement(Wrapper.findWebElement(xpath_SigninButton));
+            //     Thread.sleep(5000);
+            // }else{
+            //     attachStepEvidence("Successfully logged in and navigated to the dashboard page.");
+            // }
+        }catch(InterruptedException e) {            
+            e.printStackTrace();
+            throw new RuntimeException("Error clicking Sign In button: " + e.getMessage());
+        }  
+    }
+
+    /**
+     * Test ID:1279843-->ESS - Family and Emergency Contacts
+     * Navigate to and validate the Family and Emergency Contacts page.
+     * Scripted By:gaddem[Gadde Madhukar]
+     */
+    public void navigateAndValidateFamilyAndEmergencyContacts(){
+        
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_FamilyandEmergencyAction));
+
+    }
+
+    /**
+     * Click the Add icon to add a new contact.
+     * Scripted By:gaddem[Gadde Madhukar]
+     */
+    public void clickAddIcon(){
+        try{
+            Wrapper.waitForpresenceOfElementLocated(xpath_FamilyandEmergencyPageValidation);
+            if(Wrapper.findWebElement(xpath_FamilyandEmergencyPageValidation).isDisplayed() && Wrapper.findWebElement(xpath_MyContactsTitle).isDisplayed()){
+                Wrapper.clickWebElement(Wrapper.findWebElement(xpath_AddIcon));
+            }else{
+                Assert.fail("Failed to navigate to Family and Emergency Contacts page.");
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+            throw new RuntimeException("Error navigating to Family and Emergency Contacts page: " + e.getMessage());
+        }   
+    }
+
+    /**
+     * Select Continue option from the Add Contact menu.
+     * Scripted By:gaddem[Gadde Madhukar]
+     */
+    public void clickContinueButton(){
+        try{
+            Thread.sleep(3000);
+            Wrapper.waitForpresenceOfElementLocated(xpath_ContinueButton);
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_ContinueButton));
+        }catch(InterruptedException e){
+            e.printStackTrace();
+            throw new RuntimeException("Error clicking Continue button: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Basic Info --> Global Name
+     * Enter basic information for a new contact by retrieving data from Excel.
+     * Scripted By:gaddem[Gadde Madhukar]
+     */
+    public void enterBasicInfo() throws Exception{
+        try{
+            String lastName = ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Last Name");
+            String firstName = ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"First Name");
+            String suffix = ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Suffix");
+            String middleName = ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Middle Name");
+            Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_LastName), lastName, false);
+            Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_FirstName), firstName, false);
+            Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_Suffix), suffix, false);
+            Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_MiddleName), middleName, false);   
+        }catch(Exception e){
+            e.printStackTrace();
+            throw new Exception("Error entering basic info: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Basic Info --> Relationship
+     * Enter relationship information for a new contact by retrieving data from Excel.
+     * Scripted By:gaddem[Gadde Madhukar]
+     * 
+     */
+    public void enterRelationshipInfo() throws Exception{
+        try{
+            String relationship = ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Relationship");
+            String relationshipStartDate = ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"R_Start Date");   
+            String gender   = ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"R_Gender");
+            String rDOB = ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"R_DOB");
+            // String IsEmergencyContact = ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Is Emergency Contact");
+            // String IsPrimaryEmergencyContact = ExcelReader.getCellDataByKey(EXCEL_PATH  ,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Is Primary Emergency Contact");
+            String tinType = ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"TIN Type");
+            String tinNumber = ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"TIN Number");
+            String benefitsOfferedConditionally = ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"BOC");
+            // String emergencyContactNotes = ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Emergency_CN");
+
+            Wrapper.waitForpresenceOfElementLocated(xpath_Relationship);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(xpath_Relationship)).click();
+
+            // Select "Relationship" from dropdown
+            By RelationShipActionOption = xpath_RelationshipDropDownValues(relationship);
+            Wrapper.waitForpresenceOfElementLocated(RelationShipActionOption);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                    .elementToBeClickable(RelationShipActionOption)).click();
+
+            Wrapper.selectDate(Wrapper.findWebElement(xpath_RelationshipSD), relationshipStartDate, xpath_ResignationRetirementDateValue, xpath_DatePickerMonth, xpath_DatePickerYear, xpath_DatePickerPrevious);
+            
+            Wrapper.waitForpresenceOfElementLocated(xpath_Gender);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                    .elementToBeClickable(xpath_Gender)).click();
+
+            // Select "Gender" from dropdown
+            By genderActionOption = xpath_RelationshipDropDownValues(gender);
+            Wrapper.waitForpresenceOfElementLocated(genderActionOption);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                    .elementToBeClickable(genderActionOption)).click();
+            
+            Wrapper.selectDate(Wrapper.findWebElement(xpath_RDOB), rDOB, xpath_ResignationRetirementDateValue, xpath_DatePickerMonth, xpath_DatePickerYear, xpath_DatePickerPrevious);
+            
+            // Wrapper.waitForpresenceOfElementLocated(xpath_RelationshipPrimaryEmergencyContact);
+            // if(!Wrapper.findWebElement(xpath_RelationshipPrimaryEmergencyContact).isSelected()){
+            //     Wrapper.clickWebElement(Wrapper.findWebElement(xpath_RelationshipPrimaryEmergencyContact));
+            // }
+            
+            // Wrapper.waitForpresenceOfElementLocated(xpath_TinType);
+            // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+            //     .elementToBeClickable(xpath_TinType)).click();
+
+            // // Select "TinType" from dropdown
+            // By tinTypeActionOption = xpath_TinTypeList(tinType);
+            // Wrapper.waitForpresenceOfElementLocated(tinTypeActionOption);
+            // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+            //         .elementToBeClickable(tinTypeActionOption)).click();
+
+            // Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_TinNumber), tinNumber, false);
+            
+            // Wrapper.waitForpresenceOfElementLocated(xpath_BenefitsOfferedConditionally);
+            // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+            //     .elementToBeClickable(xpath_BenefitsOfferedConditionally)).click();
+
+            // Select "BenefitsOfferedConditionally" from dropdown
+            // By benefitsOfferedConditionallyOption = xpath_BenefitsOfferedConditionallyList(benefitsOfferedConditionally);
+            // Wrapper.waitForpresenceOfElementLocated(benefitsOfferedConditionallyOption);
+            // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+            //     .elementToBeClickable(benefitsOfferedConditionallyOption)).click();
+        }catch(Exception e){
+            e.printStackTrace();
+            throw new Exception("Error entering relationship info: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Basic Info --> Phone Details
+     * Enter phone details for a new contact by retrieving data from Excel.
+     * Scripted By:gaddem[Gadde Madhukar]
+     * 
+     */
+    public void enterPhoneDetails() throws Exception {
+        try{
+            String phoneCountryCode = ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Phone_Country");
+            String phoneType = ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Phone_Type");
+            String phoneAreaCode = ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Phone_Area Code");
+            String phoneNumber = ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Phone_Number");
+            String phoneExtension = ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Phone_Extension");
+            String phoneFromDate = ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Phone_From Date");
+            String phoneToDate = ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Phone_To Date");
+            Thread.sleep(5000);
+            Wrapper.waitForpresenceOfElementLocated(xpath_PhoneCountryCode);
+            Thread.sleep(5000); // Consider replacing with a more robust wait strategy
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                    .elementToBeClickable(xpath_PhoneCountryCode)).click();
+            Thread.sleep(3000); // Consider replacing with a more robust wait strategy
+            driver.findElement(xpath_PhoneCountryCodeManual).sendKeys(phoneCountryCode);
+            Thread.sleep(2000); // Consider replacing with a more robust wait strategy
+            // Select "Country" from dropdown
+            By phoneCountry = xpath_PhoneCountryCodeList("US");
+            Wrapper.waitForpresenceOfElementLocated(phoneCountry);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(phoneCountry)).click();
+    
+            // Wait by locator (not cached WebElement), then click a fresh element
+            Wrapper.waitForpresenceOfElementLocated(xpath_PhoneType);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                    .elementToBeClickable(xpath_PhoneType)).click();
+
+            // Select "PhoneType" from dropdown
+            By phoneTypeOption = xpath_PhoneTypeList(phoneType);
+            Wrapper.waitForpresenceOfElementLocated(phoneTypeOption);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                    .elementToBeClickable(phoneTypeOption)).click();
+
+            Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_PhoneAreaCode), phoneAreaCode,false);
+            Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_PhoneNumber), phoneNumber,false);
+            // Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_PhoneExtension), phoneExtension);  
+            // Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_PhoneFromDate), phoneFromDate);
+            // Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_PhoneToDate), phoneToDate); 
+    
+        }catch(Exception e){
+            e.printStackTrace();
+            throw new Exception("Error entering phone details: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Basic Info --> Email Details
+     * Enter email details for a new contact by retrieving data from Excel.
+     * Scripted By:gaddem[Gadde Madhukar]
+     */
+    public void enterEmailDetails() throws Exception {
+        try{
+            String emailType = ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Email Type");
+            String emailAddress = ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Email");
+            
+            // Wait by locator (not cached WebElement), then click a fresh element
+            Wrapper.waitForpresenceOfElementLocated(xpath_EmailType);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                    .elementToBeClickable(xpath_EmailType)).click();
+
+            // Select "EmailType" from dropdown
+            By EmailTypeOption = xpath_EmailTypeList(emailType);
+            Wrapper.waitForpresenceOfElementLocated(EmailTypeOption);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                    .elementToBeClickable(EmailTypeOption)).click();
+            
+            Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_Email), emailAddress, false);
+    
+        }catch(Exception e){
+            e.printStackTrace();            
+            throw new Exception("Error entering email details: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Basic Info --> Address
+     * Enter address details for a new contact by retrieving data from Excel and handling the "Use My Address" option.
+     * Scripted By:gaddem[Gadde Madhukar]
+     */
+    public void enterAddressDetails() throws Exception{
+        try{
+            String address_Type= ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Address Type");
+            if(address_Type.equalsIgnoreCase("Use My Address")){
+                if(Wrapper.findWebElement(xpath_AddressType).isSelected()){
+                    // Wrapper.clickWebElement(Wrapper.findWebElement(xpath_AddressType));
+                    
+                    Wrapper.waitForpresenceOfElementLocated(xpath_Address);
+                    Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                            .elementToBeClickable(xpath_Address)).click();
+
+                    // Select "AddressType" from dropdown
+                    // By AddressTypeOption = xpath_AddressTypeList(AddressType);
+                    Wrapper.waitForpresenceOfElementLocated(xpath_AddressValue);
+                    Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                            .elementToBeClickable(xpath_AddressValue)).click();
+
+                }
+                else{
+                    Wrapper.clickWebElement(Wrapper.findWebElement(xpath_AddressType));
+                    Wrapper.waitForpresenceOfElementLocated(xpath_Address);
+                    Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                            .elementToBeClickable(xpath_Address)).click();
+
+                    // Select "AddressType" from dropdown
+                    // By AddressTypeOption = xpath_AddressTypeList(AddressType);
+                    Wrapper.waitForpresenceOfElementLocated(xpath_AddressValue);
+                    Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                            .elementToBeClickable(xpath_AddressValue)).click();
+                }
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+            throw new Exception("Error entering address details: " + e.getMessage());
+        }        
+    }
+   
+    /**
+     * Basic Info --> National Identifiers
+     * Enter national identifier details for a new contact by retrieving data from Excel and 
+       handling dropdown selections and date pickers.
+     * Scripted By:gaddem[Gadde Madhukar]
+     */
+    public void enterNationalIdentifiers() throws Exception{
+        try{
+            String national_Identifier_Country= ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"NI_Country");
+            String national_Identifier_Type= ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"NI_Type");
+            String national_Identifier_ID= ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"NI_ID");
+            String issue_Date= ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"NI_Issue Date");
+            String expiration_Date= ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"NI_Expiration Date");
+        
+            if(Wrapper.findWebElement(xpath_NICountry).isDisplayed()){
+                 
+                // Wait by locator (not cached WebElement), then click a fresh element
+                Wrapper.waitForpresenceOfElementLocated(xpath_NICountry);
+                Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                        .elementToBeClickable(xpath_NICountry)).click();
+
+                // Thread.sleep(3000); // Consider replacing with a more robust wait strategy
+                driver.findElement(xpath_NICountryManual).sendKeys(national_Identifier_Country);
+                // Thread.sleep(2000); // Consider replacing with a more robust wait strategy
+
+                // Select "National Identifier Country" from dropdown
+                By NICountryOption = xpath_NICountryList("US");
+                Wrapper.waitForpresenceOfElementLocated(NICountryOption);
+                Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                        .elementToBeClickable(NICountryOption)).click();
+
+            
+                // Wait by locator (not cached WebElement), then click a fresh element
+                Wrapper.waitForpresenceOfElementLocated(xpath_NIType);
+                Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                        .elementToBeClickable(xpath_NIType)).click();
+
+                // Select "National Identifier Type" from dropdown
+                By NITypeOption = xpath_NITypeList(national_Identifier_Type);
+                Wrapper.waitForpresenceOfElementLocated(NITypeOption);
+                Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                        .elementToBeClickable(NITypeOption)).click();
+
+                Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_NIID), national_Identifier_ID, false);
+                Wrapper.selectDate(Wrapper.findWebElement(xpath_NIIssueDate), issue_Date, xpath_ResignationRetirementDateValue, xpath_DatePickerMonth, xpath_DatePickerYear, xpath_DatePickerPrevious);
+                Wrapper.selectDate(Wrapper.findWebElement(xpath_NIExpirationDate), expiration_Date, xpath_ResignationRetirementDateValue, xpath_DatePickerMonth, xpath_DatePickerYear, xpath_DatePickerNext);
+                }
+            else{
+                    AllureReportUtil.info("National Identifier section is not displayed for this contact.");
+                    // System.out.println("National Identifier section is not displayed for this contact.");
+                }
+        }catch(Exception e){
+            e.printStackTrace();
+            throw new Exception("Error entering national identifiers: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Submit the Family and Emergency Contact form after entering all necessary details.
+     * Scripted By:gaddem[Gadde Madhukar]
+     */
+    public void submitFamilyAndEmergencyContactForm() throws Exception{
+        try{
+            Wrapper.scrollToElement(Wrapper.findWebElement(xpath_SubmitButton),"Submit");
+            Thread.sleep(5000); // Consider replacing with a more robust wait strategy
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_SubmitButton));
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Error in submitFamilyAndEmergencyContactForm step: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Select coworker as an emergency contact and enter coworker details by retrieving data from Excel.
+     * Scripted By:gaddem[Gadde Madhukar]
+     */
+    public void selectCoworkerOption(){
+        try{
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_SelectCoworkerAsContact));
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Error in selectCoworkerOption step: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Select existing employee as an emergency contact for HR Admin.
+     * Scripted By:gaddem[Gadde Madhukar]
+     */
+    public void selectCoworkerOptionHRAdmin(){
+        try{
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_ExistingEmployeeAsContact));
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Error in selectCoworkerOptionHRAdmin step: " + e.getMessage(), e);
+        }
+    }
+     /**
+      * Enter coworker details for emergency contact by retrieving data from Excel and 
+        handling dropdown selections, date pickers, and search functionality.
+      * Scripted By:gaddem[Gadde Madhukar]
+      */
+    public void enterCoworkerDetails() throws Exception{
+        try{
+            String CoworkerRelationshipStartDate = ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"CoworkerRelationshipSD");
+            String CoworkerName= ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"CoworkerName");
+            String CoworkerRelationship = ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"CoworkerRelationship");
+            String CoworkerECNotes = ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"CoworkerECN");
+            Thread.sleep(5000);
+            if(Wrapper.findWebElement(xpath_CoworkerPageValidation).isDisplayed() || Wrapper.findWebElement(xpath_HRAdminCoworkerPageValidation).isDisplayed()){
+                Wrapper.selectDate(Wrapper.findWebElement(xpath_CoworkerRelationshipStartDate), CoworkerRelationshipStartDate, xpath_ResignationRetirementDateValue, xpath_DatePickerMonth, xpath_DatePickerYear, xpath_DatePickerPrevious);
+                
+                Wrapper.waitForpresenceOfElementLocated(xpath_CoworkerSearch);
+                Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                        .elementToBeClickable(xpath_CoworkerSearch)).click();
+                // Thread.sleep(3000); // Consider replacing with a more robust wait strategy
+                Wrapper.waitForpresenceOfElementLocated(xpath_CoworkerSearchManual);
+                driver.findElement(xpath_CoworkerSearchManual).sendKeys(CoworkerName);
+                // Thread.sleep(2000); // Consider replacing with a more robust wait strategy
+
+                By CoworkerSearchOption = xpath_CoworkerSearchList(CoworkerName);
+                Wrapper.waitForpresenceOfElementLocated(CoworkerSearchOption);
+                Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                        .elementToBeClickable(CoworkerSearchOption)).click();
+
+            
+                Wrapper.waitForpresenceOfElementLocated(xpath_CoworkerRelationship);
+                Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                        .elementToBeClickable(xpath_CoworkerRelationship)).click();
+
+                By CoworkerRelationshipOption = xpath_CoworkerRelationshipList(CoworkerRelationship);
+                Wrapper.waitForpresenceOfElementLocated(CoworkerRelationshipOption);
+                Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                        .elementToBeClickable(CoworkerRelationshipOption)).click();
+
+                Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_CoworkerEmergencyContactNotes), CoworkerECNotes, false);
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+            throw new Exception("Error entering coworker details: " + e.getMessage());  
+        }   
+    }
+    
+    public void enterHRACoworkerDetails() throws Exception {
+        try{
+            String CoworkerRelationshipStartDate = ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"CoworkerRelationshipSD");
+            String CoworkerName= ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"CoworkerName");
+            String CoworkerRelationship = ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"CoworkerRelationship");
+            String CoworkerECNotes = ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"CoworkerECN");
+            Thread.sleep(5000);
+            if(Wrapper.findWebElement(xpath_HRAdminCoworkerPageValidation).isDisplayed()){
+                Wrapper.selectDate(Wrapper.findWebElement(xpath_CoworkerRelationshipStartDate), CoworkerRelationshipStartDate, xpath_ResignationRetirementDateValue, xpath_DatePickerMonth, xpath_DatePickerYear, xpath_DatePickerPrevious);
+                
+                Wrapper.waitForpresenceOfElementLocated(xpath_CoworkerSearch);
+                Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                        .elementToBeClickable(xpath_CoworkerSearch)).click();
+                // Thread.sleep(3000); // Consider replacing with a more robust wait strategy
+                Wrapper.waitForpresenceOfElementLocated(xpath_CoworkerSearchManual);
+                driver.findElement(xpath_CoworkerSearchManual).sendKeys(CoworkerName);
+                // Thread.sleep(2000); // Consider replacing with a more robust wait strategy
+
+                By CoworkerSearchOption = xpath_CoworkerSearchList(CoworkerName);
+                Wrapper.waitForpresenceOfElementLocated(CoworkerSearchOption);
+                Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                        .elementToBeClickable(CoworkerSearchOption)).click();
+
+            
+                Wrapper.waitForpresenceOfElementLocated(xpath_CoworkerRelationship);
+                Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                        .elementToBeClickable(xpath_CoworkerRelationship)).click();
+
+                By CoworkerRelationshipOption = xpath_CoworkerRelationshipList(CoworkerRelationship);
+                Wrapper.waitForpresenceOfElementLocated(CoworkerRelationshipOption);
+                Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                        .elementToBeClickable(CoworkerRelationshipOption)).click();
+
+                Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_CoworkerEmergencyContactNotes), CoworkerECNotes, false);
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+            throw new RuntimeException("Error entering coworker details: " + e.getMessage(), e);  
+        }
+    }
+
+    //ESS - Compensation - View My Compensation
+    public void navigateToCompensation(){
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_ShowMore));
+        Wrapper.waitForpresenceOfElementLocated(xpath_Compensation);
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MyCompensation));
+    }
+
+    public void validateCompensationDetails(){
+        if(Wrapper.findWebElement(xpath_CurrentSalary).isDisplayed()){
+            Assert.assertTrue(true, "Current Salary details are displayed.");
+            
+            String salary = Wrapper.findWebElement(xpath_Salary).getText();
+            // String adjustment = Wrapper.findWebElement(xpath_Adjustment).getText();
+            // String effectivePeriod = Wrapper.findWebElement(xpath_EffectivePeriod).getText();
+            // String component = Wrapper.findWebElement(xpath_Component).getText();
+            // String percentage = Wrapper.findWebElement(xpath_Percentage).getText();
+
+            boolean isCompenensationDetailsDisplayed= !salary.isEmpty(); 
+            // && !adjustment.isEmpty() && !effectivePeriod.isEmpty(); 
+            // && !component.isEmpty() && !percentage.isEmpty();
+            
+            Assert.assertTrue(isCompenensationDetailsDisplayed, "Salary, Adjustment, and Effective Period details are displayed correctly.");
+            
+        }else{
+            Assert.fail("Current Salary details are not displayed.");
+        }
+    }
+
+    public void signOut(){
+        try{
+            Thread.sleep(5000);
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_Profile));
+            Thread.sleep(5000);
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_SignOut)); 
+        }catch(InterruptedException e){
+            e.printStackTrace();
+            throw new RuntimeException("Error signing out: " + e.getMessage(), e);
+        }
+    }
+
+    //Resignation/Retirement Withdrawal
+    public void navigateToResignationRetirementWithdrawal() {
+        try{
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_ShowMore));
+        // Wrapper.clickWebElement(Wrapper.findWebElement(xpath_Employment));
+        Wrapper.scrollToElement(Wrapper.findWebElement(xpath_ResignationRetirement),"Resignation/Retirement");
+        Thread.sleep(3000);
+        attachStepEvidence("Navigated to Resignation/Retirement page");
+        Thread.sleep(10000);
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_ResignationRetirement));
+        }catch(InterruptedException e){
+            e.printStackTrace();
+            throw new RuntimeException("Error navigating to Resignation/Retirement Withdrawal: " + e.getMessage(), e);
+        }
+
+    }
+
+    //TestCaseID:1279871 ESS - Retirement or Journey
+
+    public void navigateToResignationRetirement() {
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_ShowMore));
+        // Wrapper.clickWebElement(Wrapper.findWebElement(xpath_Employment));
+        Wrapper.scrollToElement(Wrapper.findWebElement(xpath_ResignationRetirement),"Resignation/Retirement");
+        attachStepEvidence("Navigated to Resignation/Retirement page");
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_ResignationRetirement));
+
+    }
+
+    
+
+    public void enterResignationRetirementDetails(String ResignationRetirementDate) throws Exception{
+        
+        // Wrapper.selectDate(Wrapper.findWebElement(xpath_ResignationNotificationDate), ResignationNotificationDate, xpath_ResignationNotificationDateValue, xpath_DatePickerMonth, xpath_DatePickerYear, xpath_DatePickerNext);
+        
+        Wrapper.selectDate(Wrapper.findWebElement(xpath_ResignationRetirementDate), ResignationRetirementDate, xpath_ResignationRetirementDateValue, xpath_DatePickerMonth, xpath_DatePickerYear, xpath_DatePickerNext);
+        
+        if(Wrapper.findWebElement(xpath_ResignationRetirementReasonnValidation).isDisplayed()){
+            Wrapper.waitForpresenceOfElementLocated(xpath_ResignationRetirementReason);
+            // Thread.sleep(10000);
+            Wrapper.scrollToElement(Wrapper.findWebElement(xpath_ResignationRetirementReason),"Resignation/Retirement Reason");
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                    .elementToBeClickable(xpath_ResignationRetirementReason)).click();
+            
+            // Thread.sleep(4000);
+            By ResignationRetirementOption = xpath_ReasonSelection("Resign-Personal Reasons");
+            Wrapper.waitForpresenceOfElementLocated(ResignationRetirementOption);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                    .elementToBeClickable(ResignationRetirementOption)).click();
+        }  
+    }
+
+    public void clickContinueOnResignationRetirement(){
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_Continue));
+    }
+
+    public void submitResignationRetirement(){
+        // System.out.println("Submitting the resignation/retirement request.");
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_Submit));
+        // System.out.println("Clicked on Submit button for resignation/retirement request.");
+    }
+
+    // Test CaseID: 1279873	ESS - Resignation or Journey
+
+    public void resignFromEmployment(String ResignationRetirementDate) throws Exception{
+        // navigateToResignationRetirement();
+        enterResignationRetirementDetails(ResignationRetirementDate);
+        // System.out.println("Initiating the resignation process.");
+        // Wrapper.clickWebElement(Wrapper.findWebElement(xpath_ShowMore));
+        // System.out.println("Clicked on Show More.");
+        // Wrapper.clickWebElement(Wrapper.findWebElement(xpath_ResignationRetirement));
+        // navigateToResignationRetirement();
+        // System.out.println("Navigated to Resignation/Retirement page.");
+        // Thread.sleep(5000);
+        // enterResignationRetirementDetails(ResignationRetirementDate);
+        // Wrapper.selectDate(Wrapper.findWebElement(xpath_ResignationRetirementDate), ResignationRetirementDate, xpath_ResignationRetirementDateValue, xpath_DatePickerMonth, xpath_DatePickerYear, xpath_DatePickerNext);
+        
+        if(Wrapper.findWebElement(xpath_ResignationRetirementReasonnValidation).isDisplayed()){
+
+            Wrapper.waitForpresenceOfElementLocated(xpath_ResignationRetirementAction);
+            // Thread.sleep(10000);
+            Wrapper.scrollToElement(Wrapper.findWebElement(xpath_ResignationRetirementAction),"Resignation/Retirement Action");
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                    .elementToBeClickable(xpath_ResignationRetirementAction)).click();
+            
+            // Thread.sleep(4000);
+            By ResignationRetirementActionOption = xpath_ReasonSelection("Resignation");
+            Wrapper.waitForpresenceOfElementLocated(ResignationRetirementActionOption);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                    .elementToBeClickable(ResignationRetirementActionOption)).click();
+ 
+            
+        }
+
+        clickContinueOnResignationRetirement();
+        submitResignationRetirement();
+    }
+
+    //Test CaseID: 1279847 MSS - Activity Center
+
+    By xpath_MyTeam=By.xpath("//a[text()='My Team']");
+
+    By xpath_TeamActivityCenter=By.xpath("//a[text()='Team Activity Center']");
+
+    By xpath_TeamActivityCenterPageValidation=By.xpath("//span[text()='Team']");
+   
+    By xpath_EmployeeReports=By.xpath("//oj-list-view//ul[@aria-label='Workers']//li//oj-avatar");
+    
+    By xpath_EmployeeReportsVerification=By.xpath("//ul[contains(@aria-label,'Scoreboard metric cards')]//div/div[contains(@title,'directs')]");
+    
+    By xpath_OrgHierarchy=By.xpath("//button[contains(@aria-label,'Org Hierarchy')]//span//span[text()='Org Hierarchy']");
+
+    By xpath_OrgHierarchyValidation1=By.xpath("//oj-sp-hierarchy-card[contains(@class,'hierarchy')]//div[contains(@role,'group')]/div[2]/div/div");
+    
+    By xpath_OrgHierarchyValidation2=By.xpath("//h1[contains(text(),'Org Hierarchy')]");
+
+    By xpath_BackArrow=By.xpath("//button[@aria-label='Go back']/span/span/span");
+
+    By xpath_TeamActions=By.xpath("//button[contains(@aria-label,'Team Actions')]");
+
+    By xpath_TeamActionValue=By.xpath("//div[@aria-label='Team Actions']//div/a/span/span");
+
+    By xpath_MSSCompensation=By.xpath("//label[text()='Compensation']");
+
+    By xpath_MSSCompensationValue=By.xpath("//label[text()='Salary']");
+
+    By xpath_MSSEmployment=By.xpath("//label[text()='Employment']");
+
+    By xpath_ThreeDots=By.xpath("(//button[contains(@aria-label,'Actions for')])[1]/div/span");
+
+    By xpath_ManagerActions=By.xpath("//oj-menu//oj-option/a");
+
+    WebDriverWait wait = Wrapper.getWait();
+    /**
+     * Navigate to Team Activity Center page from My Team section and validate the page elements.
+     * Scripted By:gaddem[Gadde Madhukar]
+     */
+    public void navigateToTeamActivityCenter() throws InterruptedException {
+        try{
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MyTeam));
+            Wrapper.waitForpresenceOfElementLocated(xpath_TeamActivityCenter);
+            attachStepEvidence("Manager is on the Activity Center page");
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_TeamActivityCenter));
+
+        }catch(Exception e){
+            e.printStackTrace();
+            throw new RuntimeException("Error navigating to Team Activity Center: " + e.getMessage());
+        } 
+    }
+
+    /**
+     * Validate the Team Activity Center page by checking the presence of key elements 
+       such as employee reports, org hierarchy, and team actions.
+     * Scripted By:gaddem[Gadde Madhukar]
+     */
+    public void validateTeamActivityCenterPage() throws InterruptedException {
+        
+        Wrapper.waitForpresenceOfElementLocated(xpath_TeamActivityCenterPageValidation);
+        if(Wrapper.findWebElement(xpath_TeamActivityCenterPageValidation).isDisplayed()){
+            
+
+            String employeeReportsText = Wrapper.getText(Wrapper.findWebElement(xpath_EmployeeReportsVerification)).split(" ")[0];
+            
+            int employeeReportsCount = Wrapper.findWebElements(xpath_EmployeeReports).size();
+            
+            if(employeeReportsCount == Integer.parseInt(employeeReportsText)){
+                
+                Assert.assertTrue(true, "Employee reports count is displayed correctly.");
+                
+                Wrapper.waitForpresenceOfElementLocated(xpath_OrgHierarchy);
+                Wrapper.clickWebElement(Wrapper.findWebElement(xpath_OrgHierarchy));
+                
+                Wrapper.waitForpresenceOfElementLocated(xpath_OrgHierarchyValidation1);
+                if(Wrapper.findWebElement(xpath_OrgHierarchyValidation1).isDisplayed()){
+                    Assert.assertTrue(true, "Org Hierarchy page is displayed successfully.");
+                    if(Wrapper.findWebElement(xpath_OrgHierarchyValidation2).isDisplayed()){
+                        Assert.assertTrue(true, "Org Hierarchy page header is displayed successfully.");
+                        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_BackArrow));
+                        
+                        Wrapper.waitForpresenceOfElementLocated(xpath_TeamActivityCenterPageValidation);
+                        if(Wrapper.findWebElement(xpath_TeamActivityCenterPageValidation).isDisplayed()){
+                            Assert.assertTrue(true, "Navigated back to Team Activity Center page successfully.");
+                            
+                            Wrapper.waitForpresenceOfElementLocated(xpath_TeamActions);
+                            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_TeamActions));
+                            List<WebElement> teamActionElements = wait.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_TeamActionValue));
+                            Assert.assertTrue(teamActionElements.size() > 0, "Team Actions dropdown is displayed with options.");
+                            attachStepEvidence("Clicked on Team Actions dropdown.");
+
+                            Wrapper.waitForpresenceOfElementLocated(xpath_MSSCompensation);
+                            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MSSCompensation));
+                            attachStepEvidence("Clicked on Compensation");
+
+                            if(Wrapper.findWebElements(xpath_MSSCompensationValue).size()==employeeReportsCount){
+                                Wrapper.waitForpresenceOfElementLocated(xpath_ThreeDots);
+                                Wrapper.scrollToElement(Wrapper.findWebElement(xpath_ThreeDots), "Compensation details");
+                                // Wrapper.waitForSeconds(5);
+                                wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(xpath_MSSCompensationValue));
+                                attachStepEvidence("Compensation details are displayed for the employee.");
+                                Assert.assertTrue(true, "Compensation details are displayed for the employee.");
+                                // Wrapper.waitForpresenceOfElementLocated(xpath_MSSEmployment);
+                                // Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MSSEmployment));
+
+                                Wrapper.waitForpresenceOfElementLocated(xpath_ThreeDots);
+                                Wrapper.clickWebElement(Wrapper.findWebElement(xpath_ThreeDots));
+                            
+                                wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(xpath_ManagerActions));
+                                List<WebElement> managerActionElements = wait.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_ManagerActions));
+                                Assert.assertTrue(managerActionElements.size() > 0, "Manager Actions dropdown is displayed with options.");
+                                attachStepEvidence("Clicked on three dots for manager actions.");
+                            }else{
+                                Assert.fail("Compensation details are not displayed for the employees.");
+                            }
+                        }
+                    } 
+                }
+            }
+        }else{
+            Assert.fail("Failed to navigate to Team Activity Center page.");
+        }
+    }
+
+
+
+    //Test CaseID: 1279853	MSS - Location Change
+    By xpath_MSSShowMore=By.xpath("//div[contains(@group,'manager')]//a[text()='Show More']");
+    By xpath_LocationChange=By.xpath("//div[contains(@target,'my_team_change_location')]//a[text()='Change Location' and not(contains(@group,'groupNode'))]");
+    By xpath_LocationChangeAction=By.xpath("//oj-table[@aria-label='Person Results']//table//td//a[1]");
+    By xpath_HRALocationChangeAction =By.xpath("(//oj-table[@aria-label='Person Results']//table//td//a)[2]");    
+    By xpath_LocationChangeDate=By.xpath("//span[@title='Select Date.']");
+    By xpath_LocationChangeWay=By.xpath("//oj-select-single[contains(@id,'employmentWhenAndWhy.ActionId')]//span/span");
+    By xpath_HRALocationchangeDatelogo = By.xpath("//span[@class='oj-inputdatetime-input-trigger']/span");
+
+    By xpath_LocationChangeWhy=By.xpath("//oj-select-single[contains(@id,'employmentWhenAndWhy.ActionReasonId')]//span/span");
+    
+    By xpath_ReportingEstablishment=By.xpath("//oj-select-single[contains(@id,'employmentAssignments.ReportingEstablishmentId')]//span//span");
+    
+    By xpath_ReportingLocation=By.xpath("//oj-select-single[contains(@id,'employmentAssignments.LocationId')]//span//span");
+    
+    By xpath_MSSContinueButton=By.xpath("//button[@aria-label='Continue']");
+    
+    By xpath_MSSSubmitButton=By.xpath("//button[@aria-label='Submit']");
+    // By xpath_LocationChangeWhyReason=By.xpath("//table//tr//td//div[contains(@id,'ActionReason_')]");
+    // By xpath_LocationChangeWay=By.xpath("//oj-input-text[contains(@label-hint,'change the location')]//input");
+    // By xpath_LocationChangeWhy=By.xpath("(//input[contains(@id,'whenAndWhyForm_fl_employmentWhenAndWh')])[last()]/parent::div");
+
+    // Helper method to generate dynamic xpath with text input
+    public By xpath_ReasonSelection(String reasonText) {
+        String xpath = "//div[contains(text(),'xxx')]";
+        xpath = xpath.replace("xxx", reasonText);
+        return By.xpath(xpath);
+        ////div[contains(@id,'contact-relationship')]//ul/li//span[contains(text(),'Con Ed Spouse')]
+    }
+
+    public void navigateToLocationChangePage(){
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MyTeam));
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MSSShowMore));
+        // Wrapper.clickWebElement(Wrapper.findWebElement(xpath_Employment));
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_LocationChange));
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_LocationChangeAction));
+    }
+
+    public void navigateToHRALocationChangePage() throws Exception {
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MyTeam));
+        Thread.sleep(5000);
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MSSShowMore));
+        Thread.sleep(5000);
+        // Wrapper.clickWebElement(Wrapper.findWebElement(xpath_Employment));
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_LocationChange));
+        Thread.sleep(5000);
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_HRALocationChangeAction));
+        Thread.sleep(8000);
+    }
+    
+
+    public void submitLocationChangeRequest(String LocationChangeDate) throws Exception {
+        Wrapper.selectDate(
+            Wrapper.findWebElement(xpath_LocationChangeDate),
+            LocationChangeDate,
+            xpath_ResignationRetirementDateValue,
+            xpath_DatePickerMonth,
+            xpath_DatePickerYear,
+            xpath_DatePickerNext
+        );
+
+        // Wait by locator (not cached WebElement), then click a fresh element
+        Wrapper.waitForpresenceOfElementLocated(xpath_LocationChangeWay);
+        Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(xpath_LocationChangeWay)).click();
+
+        // Select "Location Change"
+        By actionOption = xpath_ReasonSelection("Location Change");
+        Wrapper.waitForpresenceOfElementLocated(actionOption);
+        Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(actionOption)).click();
+
+        // Open Reason dropdown
+        Wrapper.waitForpresenceOfElementLocated(xpath_LocationChangeWhy);
+        Thread.sleep(5000);
+        Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(xpath_LocationChangeWhy)).click();
+
+        // Select "Work Location"
+        By reasonOption = xpath_ReasonSelection("Work Location");
+        Wrapper.waitForpresenceOfElementLocated(reasonOption);
+        Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(reasonOption)).click();
+        
+        
+        Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(xpath_MSSContinueButton)).click();
+        //Reporting Establishment
+        Wrapper.waitForpresenceOfElementLocated(xpath_ReportingEstablishment);
+        Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(xpath_ReportingEstablishment)).click();
+        By reportingEstablishmentOption = xpath_ReasonSelection("4th Ave Workout Location");
+        Wrapper.waitForpresenceOfElementLocated(reportingEstablishmentOption);
+        Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(reportingEstablishmentOption)).click();
+        
+        //Reporting Location
+        Wrapper.waitForpresenceOfElementLocated(xpath_ReportingLocation);
+        Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(xpath_ReportingLocation)).click();
+        By reportingLocationOption = xpath_ReasonSelection("Cleveland St Service Center");
+        Wrapper.waitForpresenceOfElementLocated(reportingLocationOption);
+        Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(reportingLocationOption)).click();
+
+        
+        Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(xpath_MSSContinueButton)).click();
+        
+        
+        Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(xpath_MSSSubmitButton)).click();
+        
+    }
+
+    public void submitHRALocationChangeRequest(String LocationChangeDate) throws Exception {
+        Wrapper.selectDate(
+            Wrapper.findWebElement(xpath_LocationChangeDate),
+            LocationChangeDate,
+            xpath_ResignationRetirementDateValue,
+            xpath_DatePickerMonth,
+            xpath_DatePickerYear,
+            xpath_DatePickerNext
+        );
+
+        Thread.sleep(3000);
+        // Wait by locator (not cached WebElement), then click a fresh element
+        Wrapper.waitForpresenceOfElementLocated(xpath_LocationChangeWay);
+        Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(xpath_LocationChangeWay)).click();
+        Thread.sleep(3000);
+        // Select "Location Change"
+        By actionOption = xpath_ReasonSelection("Location Change");
+        Wrapper.waitForpresenceOfElementLocated(actionOption);
+        Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(actionOption)).click();
+        Thread.sleep(3000);
+
+        // Open Reason dropdown
+        Wrapper.waitForpresenceOfElementLocated(xpath_LocationChangeWhy);
+        Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(xpath_LocationChangeWhy)).click();
+            Thread.sleep(3000);
+        // Select "Work Location"
+        By reasonOption = xpath_ReasonSelection("Work Location");
+        Wrapper.waitForpresenceOfElementLocated(reasonOption);
+        Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(reasonOption)).click();
+        Thread.sleep(3000);
+        
+        Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(xpath_MSSContinueButton)).click();
+                Thread.sleep(3000);
+        //Reporting Establishment
+        Wrapper.waitForpresenceOfElementLocated(xpath_ReportingEstablishment);
+        Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(xpath_ReportingEstablishment)).click();
+        By reportingEstablishmentOption = xpath_ReasonSelection("4th Ave Workout Location");
+        Wrapper.waitForpresenceOfElementLocated(reportingEstablishmentOption);
+        Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(reportingEstablishmentOption)).click();
+        
+        //Reporting Location
+        Wrapper.waitForpresenceOfElementLocated(xpath_ReportingLocation);
+        Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(xpath_ReportingLocation)).click();
+        By reportingLocationOption = xpath_ReasonSelection("Cleveland St Service Center");
+        Wrapper.waitForpresenceOfElementLocated(reportingLocationOption);
+        Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(reportingLocationOption)).click();
+
+        
+        Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(xpath_MSSContinueButton)).click();
+        
+        
+        Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(xpath_MSSSubmitButton)).click();
+        
+    }
+
+    //Test CaseID: 1279855 HRA Manager - Assignment Related Change Correct
+
+    By xpath_MyClientGroups=By.xpath("//a[text()='My Client Groups']");
+    By xpathHRAShowMore=By.xpath("//div[contains(@group,'workforce')]//a[text()='Show More']");
+    By xpath_EmploymentInfo=By.xpath("//div[contains(@quickactioncategory,'grp_mcg_employment')]//a[text()='Employment Info']");
+
+    By xpath_EmploymentInfoValidation=By.xpath("//h1[text()='Employment Info']");
+    
+    By xpath_EmployeeSearchBox=By.xpath("//div//input[contains(@placeholder,'Search by Name, Business Title')]");
+
+    public By HRAXpath(String Name){
+        String xpath="//ul//span[contains(text(),'test')]";
+        xpath=xpath.replace("test", Name);
+        return By.xpath(xpath);
+    }
+
+    By xpath_EmployeeSearchResultValidation=By.xpath("//div[contains(@id,'EmpInfo_sgop_h_pageSubtitle')]");
+    By xpath_HistoricalChangeOptionValidation=By.xpath("//h2[text()='Historical changes']");
+    By xpath_HistoricalAssignmentChange=By.xpath("//span//a[text()='Change Salary']");
+    By xpath_SummaryPageValidation=By.xpath("//h2[contains(@title,'Summary of')]");
+    By xpath_CorrectButton=By.xpath("//oj-toolbar//button[contains(@aria-label,'Correct')]");
+    // By xpath_HistoricalAssignmentChangeValidation=By.xpath("//span[text()='Assignment Change']");
+
+    //xpath_MSSContinueButton
+    By xpath_WhenAndWhyPageValidation=By.xpath("//span[contains(@aria-label,'When and Why')]");
+    By xpath_SalaryChangeDate=By.xpath("//oj-input-date[contains(@id,'effectiveDate')]//span[contains(@title,'Select Date')]");
+    By xpath_ActionDropDown=By.xpath("//oj-select-single[contains(@id,'actionSingleSelect')]//span/span");
+    
+    public By xpath_ActionDropDownOption(String ActionName){
+        String xpath="//div[contains(@id,'actionSingleSelect')]//oj-highlight-text/span[contains(text(),'test')]";
+        xpath=xpath.replace("test", ActionName);
+        return By.xpath(xpath);
+    }
+
+    By xpath_ReasonDropDown=By.xpath("//oj-select-single[contains(@id,'reasonSingleSelect')]//span/span");
+    public By xpath_ReasonDropDownOption(String Reason){
+        String xpath="//div[contains(@id,'reasonSingleSelect')]//oj-highlight-text/span[contains(text(),'test')]";
+        xpath=xpath.replace("test", Reason);
+        return By.xpath(xpath);
+    }
+    //Coninue Button-->xpath_MSSContinueButton
+    By xpath_SalaryChange=By.xpath("//oj-c-input-number[contains(@id,'amtInputNumber')]//input");
+    //Submit Button-->xpath_MSSSubmitButton
+
+    // By xpath_ActionNameDropDown=By.xpath("//oj-select-single[contains(@id,'employmentWhenAndWhy.CorrectionActionId')]//span/span");
+    
+    // By xpath_ReasonForChangeDropDown=By.xpath("//oj-select-single[contains(@id,'employmentWhenAndWhy.CorrectionActionReasonId')]//span/span");
+    
+    
+    //Correct: The respective  assignment details
+    //Coninue Button-->xpath_MSSContinueButton
+    //Verify: The updated value  is populated
+    //Coninue Button-->xpath_MSSContinueButton
+
+    By xpath_SeniorityDatePageValidation=By.xpath("//span[contains(@aria-label,'Seniority dates')]");
+    //Submit Button-->xpath_MSSSubmitButton
+    By xpath_DeleteButton=By.xpath("//oj-toolbar//button[contains(@aria-label,'Delete')]");
+    By xpath_DeleteTranscationPopUpValidation=By.xpath("//oj-dialog[contains(@id,'salaryDelete-dialog')]");
+    By xpath_AssignmentDeleteButton=By.xpath("//button[contains(@aria-labelledby,'warndelete')]//span[text()='Delete']");
+    By xpath_AssignmentDeletePageValidation=By.xpath("//h1[text()='Delete Assignment Change']");
+    By xpath_AssignmentSubmitButton=By.xpath("//button[contains(@aria-labelledby,'delete')]//span[contains(@id,'ActionFromHeader')]");
+
+
+
+
+    //Test CaseID: 1279856 HRA Manager - Assignment Related Change Delete
+    /**
+     * Navigate to Employment Info page from My Client Groups section.
+     * Scripted By:gaddem[Gadde Madhukar]
+     */
+    public void navigateToEmploymentInfoPage() {
+        try{
+            Wrapper.waitForpresenceOfElementLocated(xpath_MyClientGroups);
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MyClientGroups));
+            Wrapper.waitForpresenceOfElementLocated(xpathHRAShowMore);
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpathHRAShowMore));
+            Wrapper.waitForpresenceOfElementLocated(xpath_EmploymentInfo);
+            attachStepEvidence("the manager clicks on Employment info option under My Client Groups");
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_EmploymentInfo));
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Error in navigateToEmploymentInfoPage method: " + e.getMessage(), e);
+        }
+    }
+
+    public void navigateToHistoricalChangePage() throws Exception{
+        String employeeName=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"EmployeeName");
+        Wrapper.waitForpresenceOfElementLocated(xpath_EmploymentInfoValidation);
+        if(Wrapper.findWebElement(xpath_EmploymentInfoValidation).isDisplayed()){
+            AllureReportUtil.info("Successfully navigated to Employment Info page.");
+            
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_EmployeeSearchBox));
+            Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_EmployeeSearchBox), employeeName, false);
+            if(Wrapper.findWebElement(HRAXpath(employeeName)).isDisplayed()){
+                
+                Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                        .elementToBeClickable(HRAXpath(employeeName))).click();
+            }
+        }
+    }
+
+    public void deleteHistoricalAssignmentChange() throws Exception{
+        try{
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_DeleteButton));
+            Wrapper.waitForpresenceOfElementLocated(xpath_DeleteTranscationPopUpValidation);
+            Thread.sleep(5000);
+            if(Wrapper.findWebElement(xpath_DeleteTranscationPopUpValidation).isDisplayed()){
+                Assert.assertTrue(true, "Delete confirmation pop-up is displayed.");
+                Wrapper.clickWebElement(Wrapper.findWebElement(xpath_AssignmentDeleteButton));  
+            }else{
+                    Assert.fail("Delete confirmation pop-up is not displayed.");
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+            throw new RuntimeException("Error deleting historical assignment change: " + e.getMessage());
+        }
+    }
+
+    //Test CaseID: 1279855 HRA Manager - Assignment Related Change Correct
+    public void navigateToHistoricalAssignmentCorrectPage(){
+        try{
+            // Wrapper.waitForpresenceOfElementLocated(xpath_EmployeeSearchResultValidation);
+            Wrapper.waitForpresenceOfElementLocated(xpath_HistoricalChangeOptionValidation);
+            if(Wrapper.findWebElement(xpath_EmployeeSearchResultValidation).isDisplayed() && Wrapper.findWebElement(xpath_HistoricalChangeOptionValidation).isDisplayed()){
+                Assert.assertTrue(true, "Successfully navigated to Historical Changes page.");
+                Wrapper.clickWebElement(Wrapper.findWebElement(xpath_HistoricalAssignmentChange));
+            }else{
+                Assert.fail("Failed to navigate to Historical Changes page.");
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+            throw new RuntimeException("Error navigating to Historical Assignment Change page: " + e.getMessage());
+        }
+    }
+
+    public void correctHistoricalAssignmentChange(String EffectiveDate, String Action, String Reason, String SalaryChange){
+        try{
+            if(Wrapper.findWebElement(xpath_SummaryPageValidation).isDisplayed()){
+                Assert.assertTrue(true, "Successfully navigated to Summary page.");
+                Wrapper.clickWebElement(Wrapper.findWebElement(xpath_CorrectButton));
+                Wrapper.waitForpresenceOfElementLocated(xpath_WhenAndWhyPageValidation);
+                if(Wrapper.findWebElement(xpath_WhenAndWhyPageValidation).isDisplayed()){
+                    Assert.assertTrue(true, "When and Why page is displayed successfully.");
+                    Wrapper.selectDate(Wrapper.findWebElement(xpath_SalaryChangeDate), EffectiveDate, xpath_ResignationRetirementDateValue, xpath_DatePickerMonth, xpath_DatePickerYear, xpath_DatePickerNext);
+                    
+                    Wrapper.waitForpresenceOfElementLocated(xpath_ActionDropDown);
+                    Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                            .elementToBeClickable(xpath_ActionDropDown)).click();
+                    By actionOption = xpath_ActionDropDownOption(Action);
+                    Wrapper.waitForpresenceOfElementLocated(actionOption);
+                    Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                            .elementToBeClickable(actionOption)).click();
+
+                    Wrapper.waitForpresenceOfElementLocated(xpath_ReasonDropDown);
+                    Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                            .elementToBeClickable(xpath_ReasonDropDown)).click();
+                    By reasonOption = xpath_ReasonDropDownOption(Reason);
+                    Wrapper.waitForpresenceOfElementLocated(reasonOption);
+                    Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                            .elementToBeClickable(reasonOption)).click();
+
+                    Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MSSContinueButton));
+                    Wrapper.waitForpresenceOfElementLocated(xpath_SalaryChange);
+                    Wrapper.scrollToElement(Wrapper.findWebElement(xpath_SalaryChange), "Salary Change input field");
+                    Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_SalaryChange), SalaryChange, true);
+                    Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MSSSubmitButton));
+                    
+                }else{
+                    Assert.fail("When and Why page is not displayed.");
+                }
+            }else{
+                Assert.fail("Failed to navigate to Summary page.");
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+            throw new RuntimeException("Error correcting historical assignment change: " + e.getMessage());
+        }
+    }
+
+    //Test ID:1279842-->HRA - Family and Emergency Contacts
+
+    By xpath_HRAFamilyAndEmergencyContacts=By.xpath("//div[contains(@id,'all_quickactions_groupNode_workforce_management')]//div//a[text()='Family and Emergency Contacts']");
+    
+    By xpath_FamilyAndEmergencyContactPageValidation=By.xpath("//div[contains(@id,'contacts-overview-page_h_pageSubtitle')]");
+    
+    By xpath_ExistingEmployeeAsContact=By.xpath("//oj-option[contains(text(),'Select a Person as a Contact')]");
+    
+    public void navigateToFamilyAndEmergencyContacts(String EmployeeName) throws Exception{
+        try{
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MyClientGroups));
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpathHRAShowMore));
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_HRAFamilyAndEmergencyContacts));
+            if(Wrapper.findWebElement(xpath_FamilyandEmergencyPageValidation).isDisplayed()){
+                Assert.assertTrue(true, "Successfully navigated to Family and Emergency Contact page.");
+                Wrapper.clickWebElement(Wrapper.findWebElement(xpath_EmployeeSearchBox));
+                Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_EmployeeSearchBox), EmployeeName, false);
+                if(Wrapper.findWebElement(HRAXpath(EmployeeName)).isDisplayed()){
+                    Thread.sleep(5000);
+                    Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                            .elementToBeClickable(HRAXpath(EmployeeName))).click();
+                    Wrapper.waitForpresenceOfElementLocated(xpath_FamilyAndEmergencyContactPageValidation);
+                }
+            }else{
+                Assert.fail("Failed to navigate to Family and Emergency Contact page.");
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+            throw new RuntimeException("Error navigating to Family and Emergency Contacts: " + e.getMessage());
+        }
+    }
+    
+    //1279851-->HRA - Working Hours - Change
+    //xpath_MyClientGroups
+    //xpathHRAShowMore
+    By xpath_WorkingHoursChange=By.xpath("//div[contains(@id,'show_more_groupNode')]//a[text()='Change Working Hours']");
+    //Call this-->navigateToHistoricalChangePage()
+    By xpath_ChangeWorkingHoursPageValidation=By.xpath("//h1[text()='Change Working Hours']");
+    // By xpath_ManagerOption=By.xpath("//div[contains(@aria-label,'Managers')]");
+    By xpath_ChangeWorkingHoursPage=By.xpath("//span[contains(@aria-label,'Change Working Hours')]");
+    By xpath_SalaryButton=By.xpath("//div[contains(@aria-label,'Salary')]");
+    // By xpath_DocumentsRecordsOption=By.xpath("//div[contains(@aria-label,'Document records')]");
+
+    //Check if Buttons are enabled or not
+    public By xpath_ButtonEnabled(String ButtonName){
+        String xpath="//oj-switch//div[contains(@aria-label,'test')]";
+        xpath=xpath.replace("test", ButtonName);
+        return By.xpath(xpath);
+    }
+    //Call this-->xpath_MSSContinueButton
+    By xpath_WorkingHoursWhenAndWhyValidation=By.xpath("//span[contains(@aria-label,'When and why')]");
+    By xpath_DatePicker=By.xpath("//div[contains(@id,'whenAndWhyForm')]//span[contains(@title,'Select Date')]");
+    By xpath_WorkingHoursWay=By.xpath("//oj-select-single[contains(@id,'employmentWhenAndWhy.ActionId')]//span/span");
+    By xpath_WorkingHoursWhy=By.xpath("//oj-select-single[contains(@id,'employmentWhenAndWhy.ActionReasonId')]//span/span");
+    //Call this-->xpath_ReasonSelection
+    //Continue Button-->xpath_MSSContinueButton
+    By xpath_AssignmentChangeValidation=By.xpath("//span[contains(@aria-label,'Assignment')]");
+    By xpath_WorkingHoursInputField=By.xpath("//oj-input-number[@data-oj-field='WorkingHours']//input");
+    //Continue Button-->xpath_MSSContinueButton
+    By xpath_SalaryPageValidation=By.xpath("//label[contains(text(),'Salary Amount')]");
+    //Continue Button-->xpath_MSSContinueButton
+    //call this-->xpath_SeniorityDatePageValidation
+    //Submit Button-->xpath_MSSSubmitButton
+    By xpath_Home=By.xpath("//a[contains(@title,'Home')]/img");
+    By xpath_WorkingHoursChangeValidation=By.xpath("//label[text()='Working Hours']");
+
+    public void navigateToChangeWorkingHoursPage(){
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MyClientGroups));
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpathHRAShowMore));
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_WorkingHoursChange));
+        // attachStepEvidence("the manager clicks on Change Working Hours option under My Client Groups");
+        
+    }
+
+    public void searchEmployeeForWorkingHoursChange(String EmployeeName){
+        Wrapper.waitForpresenceOfElementLocated(xpath_ChangeWorkingHoursPageValidation);
+        if(Wrapper.waitForpresenceOfElementLocated(xpath_ChangeWorkingHoursPageValidation).isDisplayed()){
+            AllureReportUtil.info("Successfully navigated to Employment Info page.");
+            
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_EmployeeSearchBox));
+            Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_EmployeeSearchBox), EmployeeName, false);
+            if(Wrapper.findWebElement(HRAXpath(EmployeeName)).isDisplayed()){
+                
+                Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                        .elementToBeClickable(HRAXpath(EmployeeName))).click();
+            }
+        }
+    }
+
+    public void submitWorkingHoursChangeRequest(String EffectiveDate, String Action, String Reason) throws Exception{
+        Wrapper.waitForpresenceOfElementLocated(xpath_ChangeWorkingHoursPage);
+        if(Wrapper.findWebElement(xpath_ChangeWorkingHoursPage).isDisplayed()){
+            Assert.assertTrue(true, "Successfully navigated to Change Working Hours page.");
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_SalaryButton));
+            Wrapper.waitForpresenceOfElementLocated(xpath_ButtonEnabled("Salary"));
+            if(Wrapper.findWebElement(xpath_ButtonEnabled("Salary")).isEnabled()){
+                Assert.assertTrue(true, "Salary button is enabled.");
+            }else{
+                Assert.fail("Salary button is not enabled.");
+            }
+
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MSSContinueButton));
+            Wrapper.waitForpresenceOfElementLocated(xpath_WorkingHoursWhenAndWhyValidation);
+            if(Wrapper.findWebElement(xpath_WorkingHoursWhenAndWhyValidation).isDisplayed()){
+                Assert.assertTrue(true, "When and Why page is displayed successfully.");
+                Wrapper.selectDate(Wrapper.findWebElement(xpath_DatePicker), EffectiveDate, xpath_ResignationRetirementDateValue, xpath_DatePickerMonth, xpath_DatePickerYear, xpath_DatePickerNext);
+                
+                Wrapper.waitForpresenceOfElementLocated(xpath_WorkingHoursWay);
+                Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                        .elementToBeClickable(xpath_WorkingHoursWay)).click();
+                By actionOption = xpath_ReasonSelection(Action);
+                Wrapper.waitForpresenceOfElementLocated(actionOption);
+                Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                        .elementToBeClickable(actionOption)).click();
+
+                Wrapper.waitForpresenceOfElementLocated(xpath_WorkingHoursWhy);
+                Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                        .elementToBeClickable(xpath_WorkingHoursWhy)).click();
+                By reasonOption = xpath_ReasonSelection(Reason);
+                Wrapper.waitForpresenceOfElementLocated(reasonOption);
+                Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                        .elementToBeClickable(reasonOption)).click();
+                Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MSSContinueButton));
+            }
+        }
+    }
+
+    public void WorkingHoursChangeRequestSubmission(){
+        Wrapper.waitForpresenceOfElementLocated(xpath_AssignmentChangeValidation);
+        if(Wrapper.findWebElement(xpath_AssignmentChangeValidation).isDisplayed()){
+            Assert.assertTrue(true, "Successfully navigated to Assignment Change page.");
+            Wrapper.waitForpresenceOfElementLocated(xpath_WorkingHoursInputField);
+            Wrapper.scrollToElement(Wrapper.findWebElement(xpath_WorkingHoursInputField), "Working Hours input field");
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_WorkingHoursInputField));
+            Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_WorkingHoursInputField), "40", true);
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MSSContinueButton));
+            Wrapper.waitForpresenceOfElementLocated(xpath_SalaryPageValidation);
+            if(Wrapper.findWebElement(xpath_SalaryPageValidation).isDisplayed()){
+                Assert.assertTrue(true, "Salary page is displayed successfully.");
+                Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MSSContinueButton));
+                Wrapper.waitForpresenceOfElementLocated(xpath_SeniorityDatePageValidation);
+                if(Wrapper.findWebElement(xpath_SeniorityDatePageValidation).isDisplayed()){
+                    Assert.assertTrue(true, "Seniority Date page is displayed successfully.");
+                    Wrapper.waitForpresenceOfElementLocated(xpath_MSSSubmitButton);
+                    Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MSSSubmitButton));
+                    Wrapper.waitForpresenceOfElementLocated(xpath_ChangeWorkingHoursPageValidation);
+                }else{
+                    Assert.fail("Failed to navigate to Seniority Date page after submitting working hours change request.");
+                }
+            }else{
+                Assert.fail("Failed to navigate to Salary page after submitting working hours change request.");
+            }
+        }else{
+            Assert.fail("Failed to navigate to Assignment Change page for working hours change request.");
+        }
+    }
+
+    public void validateWorkingHoursChangeRequest()throws Exception{
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_Home));
+        navigateToEmploymentInfoPage();
+        navigateToHistoricalChangePage();
+        Thread.sleep(10000);
+        Wrapper.waitForpresenceOfElementLocated(xpath_WorkingHoursChangeValidation);
+        // driver.navigate().refresh();
+        Wrapper.waitForpresenceOfElementLocated(xpath_WorkingHoursChangeValidation);
+        Wrapper.waitForpresenceOfElementLocated(xpath_HistoricalChangeOptionValidation);
+        if(Wrapper.findWebElement(xpath_WorkingHoursChangeValidation).isDisplayed()){
+            driver.navigate().refresh();
+            Wrapper.waitForpresenceOfElementLocated(xpath_HistoricalChangeOptionValidation);
+            Wrapper.scrollToElement(Wrapper.findWebElement(xpath_WorkingHoursChangeValidation), "Working Hours change request");
+            attachStepEvidence("Validated that the Working Hours change request is displayed in Employment Info page.");
+            Assert.assertTrue(true, "Working Hours change request is displayed in Home page.");
+        }else{
+            Assert.fail("Working Hours change request is not displayed in Home page.");
+        }
+    }
+
+    //HRA - Manually Create a new Hire - L503
+    //Call-->xpath_MyClientGroups
+    By xpath_HireAnEmployee=By.xpath("//a[contains(text(),'Hire an Employee')]");
+    
+    By xpath_InfoToIncludePageValidation=By.xpath("//div/span[contains(@aria-label,'Info to include')]");
+    By xpath_CommunicationInfoButton=By.xpath("//oj-switch//div[contains(@aria-label,'Communication info')]");
+    By xpath_AddressButton=By.xpath("//oj-switch//div[contains(@aria-label,'Addresses')]");
+    By xpath_ManagerButton=By.xpath("//oj-switch//div[contains(@aria-label,'Managers')]");
+    By xpath_PayRollButton=By.xpath("//oj-switch//div[contains(@aria-label,'Payroll')]");
+    By xpath_HireSalaryButton=By.xpath("//oj-switch//div[contains(@aria-label,'Salary')]");
+    //Continue Button-->xpath_MSSContinueButton
+    
+    //Validate Page-->xpath_WorkingHoursWhenAndWhyValidation
+    By xpath_HireDatePicker=By.xpath("//oj-input-date//span/span[contains(@title,'Select Date')]");
+    
+    By xpath_LegalEmployer=By.xpath("//oj-select-single[contains(@id,'LegalEntityId')]//span/span");
+    public By xpath_LegalEmployerOption() throws Exception{
+        String LegalEmployerName=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Legal_Employer");
+        String xpath="//div[contains(@id,'LegalEntityId')]//div[contains(text(),'test')]";
+        xpath=xpath.replace("test", LegalEmployerName);
+        return By.xpath(xpath);
+    }
+
+    By xpath_WayToHire=By.xpath("//oj-select-single[contains(@id,'ActionId')]//span/span");
+    // public By xpath_WayToHireOption() throws Exception{
+    //     String WayToHire=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Way_To_Hire");
+    //     String xpath="//div[contains(@id,'ActionId')]//div[contains(text(),'test')]";
+    //     xpath=xpath.replace("test", WayToHire);
+    //     return By.xpath(xpath);
+    // }
+    By xpath_WayToHireList=By.xpath("//div[contains(@id,'ActionId')]//div[contains(@id,'ActionName')]");
+
+    By xpath_WhyToHire=By.xpath("//oj-select-single[contains(@id,'ActionReasonId')]//span/span");
+    public By xpath_WhyToHireOption() throws Exception{
+        String WhyToHire=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Why_Hiring");
+        String xpath="//div[contains(@id,'ActionReasonId')]//div[contains(text(),'test')]";
+        xpath=xpath.replace("test", WhyToHire);
+        return By.xpath(xpath);
+    }
+
+    By xpath_BusinessUnit=By.xpath("//oj-select-single[contains(@id,'BusinessUnitId')]//span/span");
+    public By xpath_BusinessUnitOption() throws Exception{
+        String BusinessUnit=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Business_Unit");
+        String xpath="//div[contains(@id,'BusinessUnitId')]//div[contains(text(),'test')]";
+        xpath=xpath.replace("test", BusinessUnit);
+        return By.xpath(xpath);
+    }
+    //Continue Button-->xpath_MSSContinueButton
+
+    By xpath_PersonalDetailsPageValidation=By.xpath("//span[contains(@aria-label,'Personal details')]");
+    // By xpath_LastNameInputField=By.xpath("//span[contains(text(),'Last Name')]/ancestor::div/input");
+    // By xpath_FirstNameInputField=By.xpath("//span[contains(text(),'First Name')]/ancestor::div/input");
+    By xpath_LastNameInputField=By.xpath("//input[contains(@id,'person-names-input-text0|input')]");
+    By xpath_FirstNameInputField=By.xpath("//input[contains(@id,'person-names-input-text1|input')]");
+    By xpath_HireGender=By.xpath("//oj-select-single[contains(@id,'gender')]//span/span");
+    public By xpath_HireGenderOption() throws Exception{
+        String Gender=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"R_Gender");
+        String xpath="//div[contains(@id,'gender')]//span[contains(text(),'test')]";
+        xpath=xpath.replace("test", Gender);
+        return By.xpath(xpath);
+    }
+    By xpath_HireDateOfBirth=By.xpath("//oj-input-date[contains(@id,'DateOfBirth')]//span/span");
+    By xpath_NationalIdentifierButton=By.xpath("//button[contains(@aria-label,'National identifiers')]//span/span[contains(normalize-space(),'National identifiers')]");
+    By xpath_NationalIdentifierCountry=By.xpath("//oj-select-single[contains(@id,'nid-country')]//span/span");
+    //Call-->xpath_NICountryManual
+    //Call-->xpath_NICountryList
+    //Call-->xpath_NIType
+    //Call-->xpath_NITypeList
+    //Call-->xpath_NIID
+    By xpath_SaveButton=By.xpath("//span/span[contains(normalize-space(),'Save')]");
+    //Continue Button-->xpath_MSSContinueButton
+
+    By xpath_CommunicationInfoPageValidation=By.xpath("//span[contains(@aria-label,'Communication info')]");
+    //Phone Details
+    By xpath_PhoneDetailsButton=By.xpath("//button//span/span[contains(normalize-space(),'Phone details')]");
+    //Call-->xpath_PhoneCountryCode
+    //Call-->xpath_PhoneCountryCodeManual
+    //Call-->xpath_PhoneCountryCodeList
+    By xpath_HirePhoneType=By.xpath("//div[contains(@id,'live-person-phones')]/parent::oj-select-single[contains(@labelled-by,'PhoneType-')]//span/span");
+    public By xpath_HirePhoneTypeOption() throws Exception{
+        String PhoneType=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Phone_Type");
+        String xpath="//oj-list-view//ul[contains(@aria-labelledby,'person-phones')]//li//span[text()='test']";
+        xpath=xpath.replace("test", PhoneType);
+        return By.xpath(xpath);
+    }
+    //Call-->xpath_PhoneAreaCode
+    //Call-->xpath_PhoneNumber
+    //Call-->xpath_SaveButton
+
+    //Email Details
+    By xpath_EmailDetailsButton=By.xpath("//button//span/span[contains(normalize-space(),'Email details')]");
+    By xpath_HireEmailType=By.xpath("//input[contains(@id,'filter-person-emails')]");
+    public By xpath_HireEmailTypeOption() throws Exception{
+        String EmailType=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"R_Email_Type");
+        String xpath="//oj-list-view//ul[contains(@aria-labelledby,'person-emails')]//li//span[text()='test']";
+        xpath=xpath.replace("test", EmailType);
+        return By.xpath(xpath);
+    }
+    //Call-->xpath_Email
+    //xpath_SaveButton
+    //Call-->xpath_MSSContinueButton
+
+    //Address Details
+    By xpath_AddressDetailsButton=By.xpath("//button//span/span[contains(normalize-space(),'Address')]");
+    
+    By xpath_AddressCountry=By.xpath("//oj-select-single[contains(@id,'country')]//span/span");
+    By xpath_AddressCountryManual=By.xpath("//oj-input-text[contains(@label-hint,'Country')]//oj-label/following::input[contains(@id,'country')]");
+    public By xpath_AddressCountryOption() throws Exception{
+        String Country=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Address_Country");
+        String xpath="//ul[contains(@aria-label,'Country')]//span[text()='test']";
+        xpath=xpath.replace("test", Country);
+        return By.xpath(xpath);
+    }
+
+    By xpath_HireAddressType=By.xpath("//oj-select-single[contains(@id,'address-type')]//span/span");
+    public By xpath_HireAddressTypeOption() throws Exception{
+        String AddressType=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Address_Type");
+        String xpath="//ul[contains(@aria-labelledby,'address-type')]//span[contains(text(),'test')]";
+        xpath=xpath.replace("test", AddressType);
+        return By.xpath(xpath);
+    }
+    By xpath_AddressLine1=By.xpath("//oj-input-text[contains(@id,'AddressLine1')]//div/input");
+    By xpath_AddressLine2=By.xpath("//oj-input-text[contains(@id,'AddressLine2')]//div/input");
+
+    By xpath_ZIPCode=By.xpath("//oj-select-single[contains(@id,'PostalCode')]//span/span");
+    By xpath_ZIPCodeManual=By.xpath("//oj-input-text[contains(@id,'geography_PostalCode')]//input");
+    public By xpath_ZIPCodeOption() throws Exception{
+        String ZIPCode=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"ZIP_CODE");
+        String xpath="//ul[contains(@aria-labelledby,'PostalCode')]//span[contains(text(),'test')]";
+        xpath=xpath.replace("test", ZIPCode);
+        return By.xpath(xpath);
+    }
+
+    By xpath_ValidateButton=By.xpath("//button[contains(@aria-label,'Edit Home')]");
+    //Assignment Details
+    By xpath_AssignmentPageValidation=By.xpath("//span[contains(@aria-label,'Assignment')]");
+    By xpath_AssignmentNumber=By.xpath("//oj-input-text//input[contains(@id,'AssignmentNumber')]");
+    By xpath_AssignmentStatusPicker=By.xpath("//oj-select-single[contains(@id,'AssignmentStatusTypeId')]//span/span");
+    By xpath_AssignmentStatusList=By.xpath("//div[contains(@id,'AssignmentStatusTypeId')]//td/div[contains(@id,'UserStatus')]");
+    By xpath_PersonTypePicker=By.xpath("//oj-select-single[contains(@id,'UserPersonTypeId')]//span/span");
+    public By xpath_PersonTypeOption() throws Exception{
+        String PersonType=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Person_Type");
+        String xpath="//oj-list-view[contains(@id,'UserPersonTypeId')]//li/div/span[contains(text(),'test')]";
+        xpath=xpath.replace("test", PersonType);
+        return By.xpath(xpath);
+    }
+    // By xpath_JobPicker=By.xpath("//oj-select-single[contains(@id,'JobId')]//span/span");
+    By xpath_JobPicker=By.xpath("(//span[text()='Job']//following::input)[1]");
+    By xpath_JobManual=By.xpath("//oj-input-text[contains(@id,'JobId')]//input");
+    By xpath_JobList=By.xpath("//div[contains(@id,'JobId')]//div[contains(@id,'JobName')]");
+    By xpath_BusinessTitle=By.xpath("//oj-input-text[contains(@id,'AssignmentName')]//input");
+    
+    By xpath_GradePicker=By.xpath("//oj-select-single[contains(@id,'GradeId')]//span/span");
+    // By xpath_GradePicker=By.xpath("//span[text()='Grade']//following::input)[1]");
+    By xpath_GradeManual=By.xpath("//oj-input-text[contains(@id,'GradeId')]//input");
+    By xpath_GradeList=By.xpath("//div[contains(@id,'GradeId')]//tbody/tr");
+
+    By xpath_DepartmentPicker=By.xpath("//oj-select-single[contains(@id,'DepartmentId')]//span/span");
+    // By xpath_DepartmentPicker=By.xpath("//span[text()='Department']//following::input[1]");
+    By xpath_DepartmentManual=By.xpath("//oj-input-text[contains(@id,'DepartmentId')]//input");
+    By xpath_DepartmentList=By.xpath("//div[contains(@id,'DepartmentId')]//div[contains(@id,'Name')]");
+    
+    By xpath_ReportingEstablishmentPicker=By.xpath("//oj-select-single[contains(@id,'ReportingEstablishmentId')]//span/span");
+    By xpath_ReportingEstablishmentManual=By.xpath("//oj-input-text[contains(@id,'ReportingEstablishmentId')]//input");
+    By xpath_ReportingEstablishmentList=By.xpath("//div[contains(@id,'ReportingEstablishmentId')]//div[contains(@id,'Name')]");
+    
+    By xpath_LocationPicker=By.xpath("//oj-select-single[contains(@id,'LocationId')]//span/span");
+    By xpath_LocationManual=By.xpath("//oj-input-text[contains(@id,'LocationId')]//input");
+    By xpath_LocationList=By.xpath("//div[contains(@id,'LocationId')]//div[contains(@id,'Name')]");
+    
+    By xpath_WorkingAtHome=By.xpath("//oj-select-single[contains(@id,'WorkAtHome')]//span/span");
+    public By xpath_WorkingAtHomeOption() throws Exception{
+        String WorkAtHome=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Work_At_Home");
+        String xpath="//ul[contains(@aria-labelledby,'WorkAtHome')]//li//span[contains(text(),'test')]";
+        xpath=xpath.replace("test", WorkAtHome);
+        return By.xpath(xpath);
+    }
+
+    By xpath_WorkerCategory=By.xpath("//oj-select-single[contains(@id,'WorkerCategory')]//span/span");
+    public By xpath_WorkerCategoryOption() throws Exception{
+        String WorkerCategory=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Worker_Category");
+        String xpath="//ul[contains(@aria-labelledby,'WorkerCategory')]//li//span[contains(text(),'test')]";
+        xpath=xpath.replace("test", WorkerCategory);
+        return By.xpath(xpath);
+    }
+
+    By xpath_AssignmentCategory=By.xpath("//oj-select-single[contains(@id,'AssignmentCategory')]//span/span");
+    public By xpath_AssignmentCategoryOption() throws Exception{
+        String AssignmentCategory=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Assignment_Category");
+        String xpath="//ul[contains(@aria-labelledby,'AssignmentCategory')]//li//span[contains(text(),'test')]";
+        xpath=xpath.replace("test", AssignmentCategory);
+        return By.xpath(xpath);
+    }
+
+    By xpath_RegularTemporary=By.xpath("//oj-select-single[contains(@id,'PermanentTemporary')]//span/span");
+    public By xpath_RegularTemporaryOption() throws Exception{
+        String RegularTemporary=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Regular_Temporary");
+        String xpath="//ul[contains(@aria-labelledby,'PermanentTemporary')]//li//span[contains(text(),'test')]"; 
+        xpath=xpath.replace("test", RegularTemporary);
+        return By.xpath(xpath);
+    }
+
+    By xpath_FullTimePartTime=By.xpath("//oj-select-single[contains(@id,'FullPartTime')]//span/span");
+    public By xpath_FullTimePartTimeOption() throws Exception{
+        String FullTimePartTime=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Full_Time_Part_Time");
+        String xpath="//ul[contains(@aria-labelledby,'FullPartTime')]//li//span[contains(text(),'test')]";
+        xpath=xpath.replace("test", FullTimePartTime);
+        return By.xpath(xpath);
+    }
+
+    By xpath_HourlyPaidSalaried=By.xpath("//oj-select-single[contains(@id,'HourlySalariedCode')]//span/span");
+    public By xpath_HourlyPaidSalariedOption() throws Exception{
+        String HourlyPaidSalaried=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Hourly_Paid_Salaried");
+        String xpath="//ul[contains(@aria-labelledby,'HourlySalariedCode')]//li//span[contains(text(),'test')]";
+        xpath=xpath.replace("test", HourlyPaidSalaried);
+        return By.xpath(xpath);
+    }
+
+    By xpath_WorkingHours=By.xpath("//oj-input-number[contains(@id,'NormalHours')]//input");
+    
+    By xpath_WorkingHoursFrequency=By.xpath("//oj-select-single[contains(@id,'Frequency')]//span/span");
+    public By xpath_WorkingHoursFrequencyOption() throws Exception{
+        String WorkingHoursFrequency=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Working_Hours_Frequency");
+        String xpath="//oj-list-view[contains(@id,'Frequency')]//li//span[text()='test']";
+        xpath=xpath.replace("test", WorkingHoursFrequency);
+        return By.xpath(xpath);
+    }
+
+    By xpath_UnionMember=By.xpath("//oj-select-single[contains(@id,'UnionMember')]//span/span");
+    public By xpath_UnionMemberOption() throws Exception{
+        String UnionMember=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Union_Member");
+        String xpath="//oj-list-view[contains(@id,'UnionMember')]//li//span[text()='test']";
+        xpath=xpath.replace("test", UnionMember);
+        return By.xpath(xpath);
+    }
+
+    By xpath_Union=By.xpath("//oj-select-single[contains(@id,'UnionId')]//span/span");
+    By xpath_UnionManual=By.xpath("//oj-input-text[contains(@id,'UnionId')]//input");
+    By xpath_UnionList=By.xpath("//div[contains(@id,'UnionId')]//oj-table//tr//div[contains(@id,'UnionName')]");
+
+    By xpath_BargainingUnit=By.xpath("//oj-select-single[contains(@id,'BargainingUnitCode')]//span/span");
+    By xpath_BargainingUnitManual=By.xpath("//oj-input-text[contains(@id,'BargainingUnitCode')]//input");
+    By xpath_BargainingUnitList=By.xpath("//div[contains(@id,'BargainingUnitCode')]//oj-table//tr//div[contains(@id,'BargainingUnitName')]");
+    
+    By xpath_OfficerCode=By.xpath("(//span[text()='Officer Code']//following::span)[1]");
+    public By xpath_OfficerCodeOption() throws Exception{
+        String OfficerCode=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Officer_Code");
+        String xpath="//ul[contains(@aria-labelledby,'officerCode')]//li//span[contains(text(),'test')]";
+        xpath=xpath.replace("test", OfficerCode);
+        return By.xpath(xpath);
+    }
+
+    //Continue Button-->xpath_MSSContinueButton
+    By xpath_ManagerDetailsPageValidation=By.xpath("//oj-hcm-collection-item[contains(@id,'manager')]");
+    //Continue Button-->xpath_MSSContinueButton
+    By xpath_PayrollDetailsPageValidation=By.xpath("//h2[contains(@aria-label,'Payroll Frequency')]");
+    By xpath_HirePayrollButton=By.xpath("//oj-c-button[contains(@title,'Payroll')]//button");
+    By xpath_Payroll=By.xpath("//oj-select-single[contains(@labelled-by,'payroll-')]//span/span");
+    public By xpath_PayrollOption() throws Exception{
+        // String Payroll=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Payroll");
+        String xpath="//ul[contains(@aria-labelledby,'payroll-')]//li//span[contains(text(),'test')]";
+        xpath=xpath.replace("test", "CECONY Weekly");
+        return By.xpath(xpath);
+    }
+    By xpath_TimeCardRequired=By.xpath("//oj-select-single[contains(@id,'Payrolls.TimeCardRequired')]//span/span");
+    public By xpath_TimeCardRequiredOption() throws Exception{
+        // String TimeCardRequired=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Time_Card_Required");
+        String xpath="//ul[contains(@aria-labelledby,'Payrolls.TimeCardRequired')]//li//span[contains(text(),'test')]";
+        xpath=xpath.replace("test", "No");
+        return By.xpath(xpath);
+    }
+    //Call-->xpath_SaveButton
+    By xpath_PrimaryValidationAfterSave=By.xpath("//span[contains(@aria-label,'Primary')]");
+    //Continue Button-->xpath_MSSContinueButton
+    By xpath_HireSalaryPageValidation=By.xpath("//span[contains(@aria-label,'Salary')]");
+    By xpath_SalaryBasis=By.xpath("//oj-select-single[contains(@item-text,'SalaryBasisName')]//span/span");
+    public By xpath_SalaryBasisOption() throws Exception{
+        // String SalaryBasis=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Salary_Basis");
+        String xpath="//ul[contains(@aria-labelledby,'basisSingleSelect')]//li//span[contains(text(),'test')]";
+        xpath=xpath.replace("test", "Hourly Rate");
+        return By.xpath(xpath);
+    }
+    By xpath_SalaryAmount=By.xpath("//oj-c-input-number[contains(@id,'amtInputNumber')]//input");
+    //Call-->xpath_MSSubmitButton
+
+    public void navigateToHireAnEmployeePage(){
+        try{
+        Thread.sleep(3000);
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MyClientGroups));
+        Thread.sleep(3000);
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_HireAnEmployee));
+        Thread.sleep(3000);
+        attachStepEvidence("the manager clicks on Hire an Employee option under My Client Groups");
+        }catch(InterruptedException e){
+            e.printStackTrace();
+            throw new RuntimeException("Error navigating to Hire an Employee page: " + e.getMessage());
+        }
+    }
+
+    public void fillInfoToIncludePage() throws Exception{
+        Wrapper.waitForpresenceOfElementLocated(xpath_InfoToIncludePageValidation);
+        if(Wrapper.findWebElement(xpath_InfoToIncludePageValidation).isDisplayed()){
+            Assert.assertTrue(true, "Successfully navigated to Info to include page.");
+            attachStepEvidence("the manager is on Info to include page after clicking Hire an Employee.");
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_CommunicationInfoButton));
+            Wrapper.waitForpresenceOfElementLocated(xpath_ButtonEnabled("Communication info"));
+            if(Wrapper.findWebElement(xpath_ButtonEnabled("Communication info")).isEnabled()){
+                Assert.assertTrue(true, "Communication info button is enabled.");
+            }else{
+                Assert.fail("Communication info button is not enabled.");
+            }
+
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_AddressButton));
+            Thread.sleep(3000);
+            Wrapper.waitForpresenceOfElementLocated(xpath_ButtonEnabled("Addresses"));
+            if(Wrapper.findWebElement(xpath_ButtonEnabled("Addresses")).isEnabled()){
+                Assert.assertTrue(true, "Addresses button is enabled.");
+            }else{
+                Assert.fail("Addresses button is not enabled.");
+            }
+
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_ManagerButton));
+            Wrapper.waitForpresenceOfElementLocated(xpath_ButtonEnabled("Managers"));
+            if(Wrapper.findWebElement(xpath_ButtonEnabled("Managers")).isEnabled()){
+                Assert.assertTrue(true, "Managers button is enabled.");
+            }else{
+                Assert.fail("Managers button is not enabled.");
+            }
+
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_PayRollButton));
+            Wrapper.waitForpresenceOfElementLocated(xpath_ButtonEnabled("Payroll"));
+            if(Wrapper.findWebElement(xpath_ButtonEnabled("Payroll")).isEnabled()){
+                Assert.assertTrue(true, "Payroll button is enabled.");
+            }else{
+                Assert.fail("Payroll button is not enabled.");
+            }
+            attachStepEvidence("the manager validated that Communication info, Addresses, Managers and Payroll buttons are enabled in Info to include page for hiring a new employee.");
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_HireSalaryButton));
+            Wrapper.waitForpresenceOfElementLocated(xpath_ButtonEnabled("Salary"));
+            if(Wrapper.findWebElement(xpath_ButtonEnabled("Salary")).isEnabled()){
+                Assert.assertTrue(true, "Salary button is enabled.");
+            }else{
+                Assert.fail("Salary button is not enabled.");
+            }
+            Thread.sleep(10000);
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MSSContinueButton));
+            Thread.sleep(10000);
+        }else{
+            Assert.fail("Failed to navigate to Info to include page after clicking Hire an Employee.");
+        }
+    }
+
+    public void fillWhenAndWhyPage() throws Exception{
+        String Hire_Date=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Hire_Date");
+        Wrapper.waitForpresenceOfElementLocated(xpath_WorkingHoursWhenAndWhyValidation);
+        if(Wrapper.findWebElement(xpath_WorkingHoursWhenAndWhyValidation).isDisplayed()){
+            Assert.assertTrue(true, "When and Why page is displayed successfully.");
+            Wrapper.selectDate(Wrapper.findWebElement(xpath_HireDatePicker), Hire_Date, xpath_ResignationRetirementDateValue, xpath_DatePickerMonth, xpath_DatePickerYear, xpath_DatePickerNext);
+            
+            Wrapper.waitForpresenceOfElementLocated(xpath_LegalEmployer);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                    .elementToBeClickable(xpath_LegalEmployer)).click();
+            By legalEmployerOption = xpath_LegalEmployerOption();
+            Thread.sleep(3000);
+            Wrapper.waitForpresenceOfElementLocated(legalEmployerOption);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                    .elementToBeClickable(legalEmployerOption)).click();
+            Thread.sleep(5000);
+            // Wrapper.waitForpresenceOfElementLocated(xpath_WayToHire);
+            // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+            //         .elementToBeClickable(xpath_WayToHire)).click();
+            // By wayToHireOption = xpath_WayToHireOption();
+            // Wrapper.waitForpresenceOfElementLocated(wayToHireOption);
+            // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+            //         .elementToBeClickable(wayToHireOption)).click();
+            // for(WebElement element:Wrapper.findWebElements(xpath_WayToHireList)){
+            //     if(element.getText().equals(ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Way_To_Hire"))){
+            //         Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+            //                 .elementToBeClickable(element)).click();
+            //         break;
+            //     }
+            // }
+
+            Wrapper.waitForpresenceOfElementLocated(xpath_WhyToHire);
+            Thread.sleep(4000);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                    .elementToBeClickable(xpath_WhyToHire)).click();
+                    Thread.sleep(6000);
+            By whyToHireOption = xpath_WhyToHireOption();
+            Wrapper.waitForpresenceOfElementLocated(whyToHireOption);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                    .elementToBeClickable(whyToHireOption)).click();
+            Thread.sleep(6000);
+            // fillInfoToIncludePage();
+            // Assert.assertTrue(true, "Manager filled the details in When and Why page successfully.");
+            
+            Wrapper.waitForpresenceOfElementLocated(xpath_BusinessUnit);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                    .elementToBeClickable(xpath_BusinessUnit)).click();
+                    Thread.sleep(10000);
+            By businessUnitOption = xpath_BusinessUnitOption();
+            Wrapper.waitForpresenceOfElementLocated(businessUnitOption);
+            Thread.sleep(10000);
+            Wrapper.scrollToElement(Wrapper.findWebElement(businessUnitOption), "Business Unit option");    
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                    .elementToBeClickable(businessUnitOption)).click();
+                    Thread.sleep(6000);
+            
+            attachStepEvidence("the manager filled the details in When and Why page for hiring a new employee.");
+            Thread.sleep(10000);
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MSSContinueButton));
+            Thread.sleep(10000);
+        }else{
+            Assert.fail("When and Why page is not displayed after clicking Continue button on Info to include page.");
+        }
+    }
+
+    public void fillPersonalDetailsPage() throws Exception{
+        String LastName=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Last Name");
+        String FirstName=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"First Name");
+        String DOB =  ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"R_DOB");
+        Wrapper.waitForpresenceOfElementLocated(xpath_PersonalDetailsPageValidation);
+        if(Wrapper.findWebElement(xpath_PersonalDetailsPageValidation).isDisplayed()){
+            Assert.assertTrue(true, "Personal Details page is displayed successfully.");
+            Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_LastNameInputField), LastName, false);
+            Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_FirstNameInputField), FirstName, false);
+
+            Wrapper.waitForpresenceOfElementLocated(xpath_HireGender);
+            // Thread.sleep(5000);
+            Wrapper.scrollToElement(Wrapper.findWebElement(xpath_HireGender), "Gender dropdown");
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                    .elementToBeClickable(xpath_HireGender)).click();
+                    Thread.sleep(5000);
+            By genderOption = xpath_HireGenderOption();
+            Wrapper.waitForpresenceOfElementLocated(genderOption);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                    .elementToBeClickable(genderOption)).click();
+                Thread.sleep(5000);
+            Wrapper.waitForpresenceOfElementLocated(xpath_HireDateOfBirth);
+            Wrapper.selectDate(Wrapper.findWebElement(xpath_HireDateOfBirth), DOB, xpath_ResignationRetirementDateValue, xpath_DatePickerMonth, xpath_DatePickerYear, xpath_DatePickerPrevious);
+            
+            attachStepEvidence("the manager filled the details in Personal Details page for hiring a new employee.");
+            Wrapper.scrollToElement(Wrapper.findWebElement(xpath_NationalIdentifierButton), "National Identifier button");
+            Wrapper.waitForElementToBeClickable(Wrapper.findWebElement(xpath_NationalIdentifierButton));
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_NationalIdentifierButton));
+        }else{
+            Assert.fail("Personal Details page is not displayed after clicking Continue button on When and Why page.");
+        }
+    }
+
+    public void fillNationalIdentifierDetails() throws Exception{
+        String NICountry=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"NI_Country");
+        String NIType=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"NI_Type");
+        String NIID=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"NI_ID");
+        if(Wrapper.findWebElement(xpath_NationalIdentifierCountry).isDisplayed()){
+            Assert.assertTrue(true, "National Identifier details page is displayed successfully.");
+            // Wrapper.scrollToElement(Wrapper.findWebElement(xpath_NationalIdentifierCountry), "National Identifier Country dropdown");
+            // Wrapper.waitForpresenceOfElementLocated(xpath_NationalIdentifierCountry);
+            // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+            //         .elementToBeClickable(xpath_NationalIdentifierCountry)).click();
+            // Wrapper.waitForpresenceOfElementLocated(xpath_NICountryManual);
+            // driver.findElement(xpath_NICountryManual).clear();
+            // driver.findElement(xpath_NICountryManual).sendKeys(NICountry);
+            // By niCountryOption = xpath_NICountryList("US");
+            // Wrapper.waitForpresenceOfElementLocated(niCountryOption);
+            // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+            //         .elementToBeClickable(niCountryOption)).click();
+            Thread.sleep(4000);
+            Wrapper.waitForpresenceOfElementLocated(xpath_NIType);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                    .elementToBeClickable(xpath_NIType)).click();
+                    Thread.sleep(4000);
+            By niTypeOption = xpath_NITypeList(NIType);
+            Wrapper.waitForpresenceOfElementLocated(niTypeOption);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                    .elementToBeClickable(niTypeOption)).click();
+                    Thread.sleep(4000);
+
+            Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_NIID), NIID, false);
+
+            Thread.sleep(5000);
+            attachStepEvidence("the manager filled the details in National Identifier section for hiring a new employee.");
+            Thread.sleep(5000);
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_SaveButton));
+            Thread.sleep(5000);
+            Wrapper.waitForpresenceOfElementLocated(xpath_PrimaryValidationAfterSave);
+            Wrapper.waitForpresenceOfElementLocated(xpath_MSSContinueButton);
+            Thread.sleep(10000);
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MSSContinueButton));
+            Thread.sleep(10000);
+        }else{
+            Assert.fail("National Identifier details page is not displayed after clicking National Identifier button on Personal Details page.");
+        }
+    }
+
+    public void fillCommunicationInfoDetails() throws Exception{
+        String PhoneCountryCode=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Phone_Country");
+        String PhoneAreaCode=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Phone_Area Code");
+        String PhoneNumber=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Phone_Number");
+        // String PhoneType=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Phone_Type");
+        Wrapper.waitForpresenceOfElementLocated(xpath_CommunicationInfoPageValidation);
+        if(Wrapper.findWebElement(xpath_CommunicationInfoPageValidation).isDisplayed()){
+            Assert.assertTrue(true, "Communication Info page is displayed successfully.");
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_PhoneDetailsButton));
+            Thread.sleep(3000);
+            Wrapper.waitForpresenceOfElementLocated(xpath_PhoneCountryCode);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                    .elementToBeClickable(xpath_PhoneCountryCode)).click();
+                    Thread.sleep(4000);
+            // Wrapper.waitForpresenceOfElementLocated(xpath_PhoneCountryCodeManual);
+            // driver.findElement(xpath_PhoneCountryCodeManual).sendKeys(PhoneCountryCode);
+            Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_PhoneCountryCodeManual), PhoneCountryCode, true);
+            // By phoneCountryCodeOption = xpath_PhoneCountryCodeList("US");
+            // Wrapper.waitForpresenceOfElementLocated(phoneCountryCodeOption);
+            // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+            //         .elementToBeClickable(phoneCountryCodeOption)).click();
+
+            Wrapper.waitForpresenceOfElementLocated(xpath_HirePhoneType);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                    .elementToBeClickable(xpath_HirePhoneType)).click();
+                Thread.sleep(5000);
+            By phoneTypeOption = xpath_HirePhoneTypeOption();
+            Wrapper.waitForpresenceOfElementLocated(phoneTypeOption);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                    .elementToBeClickable(phoneTypeOption)).click();
+                Thread.sleep(5000);
+            Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_PhoneAreaCode), PhoneAreaCode, false);
+            Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_PhoneNumber), PhoneNumber, false);
+
+            attachStepEvidence("the manager filled the details in Communication Info page for hiring a new employee.");
+
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_SaveButton));
+            Wrapper.waitForpresenceOfElementLocated(xpath_PrimaryValidationAfterSave);
+            Thread.sleep(5000);
+            //Fill Email details similarly by clicking Email Details button and then click Continue button
+        }else{
+            Assert.fail("Communication Info page is not displayed after clicking Continue button on National Identifier details page.");
+        }
+    }
+
+    public void fillEmailDetails() throws Exception{
+        // String Email=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Email");
+        // String EmailType=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"R_Email_Type");
+        // Wrapper.waitForpresenceOfElementLocated(xpath_EmailDetailsButton);
+        // Thread.sleep(2000);
+        // Wrapper.waitForElementToBeClickable(Wrapper.findWebElement(xpath_EmailDetailsButton));
+        // Wrapper.clickWebElement(Wrapper.findWebElement(xpath_EmailDetailsButton));
+
+        // Wrapper.waitForpresenceOfElementLocated(xpath_HireEmailType);
+        // Wrapper.scrollToElement(Wrapper.findWebElement(xpath_HireEmailType), "Email Type dropdown");
+        // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+        //         .elementToBeClickable(xpath_HireEmailType)).click();
+        // By emailTypeOption = xpath_HireEmailTypeOption();
+        // Wrapper.waitForpresenceOfElementLocated(emailTypeOption);
+        // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+        //         .elementToBeClickable(emailTypeOption)).click();
+        // Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_HireEmailType), ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Email Type"), true);
+
+        // Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_Email), Email, false);
+
+        // attachStepEvidence("the manager filled the details in Email section for hiring a new employee.");
+
+        // Wrapper.clickWebElement(Wrapper.findWebElement(xpath_SaveButton));
+        // Wrapper.waitForpresenceOfElementLocated(xpath_PrimaryValidationAfterSave);
+        // Wrapper.waitForpresenceOfElementLocated(xpath_MSSContinueButton);
+        // Thread.sleep(10000);
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MSSContinueButton));
+        Thread.sleep(10000);
+    }
+
+    public void fillAddressDetails() throws Exception{
+        String AddressCountry=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Address_Country");
+        // String AddressType=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Address_Type");
+        String AddressLine1=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Address_Line1");
+        // String AddressLine2=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Address_Line2");
+        // String ZIPCode=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"ZIP_CODE");
+        Thread.sleep(4000);
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_AddressDetailsButton));
+        Thread.sleep(4000);
+        // Wrapper.waitForpresenceOfElementLocated(xpath_AddressCountry);
+        // Thread.sleep(4000);
+         if(Wrapper.findWebElement(xpath_AddressCountry).isDisplayed()){
+            Assert.assertTrue(true, "Address details page is displayed successfully.");
+        //     Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+        //             .elementToBeClickable(xpath_AddressCountry)).click();
+        //             Thread.sleep(4000);
+            // driver.findElement(xpath_AddressCountryManual).sendKeys(AddressCountry);
+            // Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_AddressCountryManual), AddressCountry, true);
+            // Thread.sleep(4000);
+            // By addressCountryOption = xpath_AddressCountryOption();
+            // Wrapper.waitForpresenceOfElementLocated(addressCountryOption);
+            // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+            //         .elementToBeClickable(addressCountryOption)).click();
+
+            Wrapper.waitForpresenceOfElementLocated(xpath_HireAddressType);
+            Thread.sleep(4000);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                    .elementToBeClickable(xpath_HireAddressType)).click();
+                    Thread.sleep(4000);
+            By addressTypeOption = xpath_HireAddressTypeOption();
+            Wrapper.waitForpresenceOfElementLocated(addressTypeOption);
+            Thread.sleep(4000);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                    .elementToBeClickable(addressTypeOption)).click();
+                Thread.sleep(4000);
+
+            Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_AddressLine1), AddressLine1, false);
+            Thread.sleep(4000);
+            // // Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_AddressLine2), AddressLine2, false);
+
+            Wrapper.waitForpresenceOfElementLocated(xpath_ZIPCode);
+            Thread.sleep(4000);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                    .elementToBeClickable(xpath_ZIPCode)).click();
+                    Thread.sleep(4000);
+            Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_ZIPCodeManual), ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"ZIP_CODE"), true);
+            By zipCodeOption = xpath_ZIPCodeOption();
+            Thread.sleep(4000);
+            Wrapper.waitForpresenceOfElementLocated(zipCodeOption);
+            Thread.sleep(4000);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                    .elementToBeClickable(zipCodeOption)).click();
+            Thread.sleep(4000);
+            attachStepEvidence("the manager filled the details in Address section for hiring a new employee.");
+            Wrapper.scrollToElement(Wrapper.findWebElement(xpath_SaveButton), "Save button");
+            Thread.sleep(4000);
+            Wrapper.waitForpresenceOfElementLocated(xpath_SaveButton);
+            Wrapper.waitForElementToBeClickable(Wrapper.findWebElement(xpath_SaveButton));
+            Thread.sleep(4000);
+            
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_SaveButton));
+            Thread.sleep(10000);
+            Wrapper.waitForpresenceOfElementLocated(xpath_PrimaryValidationAfterSave);
+            Thread.sleep(10000);
+            Wrapper.waitForpresenceOfElementLocated(xpath_ValidateButton);
+            Thread.sleep(10000);
+            Wrapper.waitForpresenceOfElementLocated(xpath_MSSContinueButton);
+            Thread.sleep(15000);
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MSSContinueButton));
+
+        // }
+        // else{
+        //     Assert.fail("Address details page is not displayed after clicking Address button on Communication Info page.");
+        // }
+    }
+}
+
+    public void fillAssignmentDetails() throws Exception{
+        String AssignmentNumber=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Assignment_Number");
+        String AssignmentStatus=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Assignment_Status");
+        // String PersonType=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Person_Type");
+        String Job=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Job");
+        String BusinessTitle=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Business_Title");
+        String Grade=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Grade");
+        String Department=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Department");
+        String ReportingEstablishment=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Reporting_Establishment");
+        String Location=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Location");
+        String WorkingAtHome=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Work_At_Home");
+        String WorkerCategory=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Worker_Category");
+        String AssignmentCategory=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Assignment_Category");
+        String RegularTemporary=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Regular_Temporary");
+        String FullTimePartTime=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Full_Time_Part_Time");
+        String HourlyPaidSalaried=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Hourly_Paid_Salaried");
+        String WorkingHoursFrequency=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Working_Hours_Frequency");
+        String UnionMember=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Union_Member");
+        Wrapper.waitForpresenceOfElementLocated(xpath_AssignmentPageValidation);
+        Thread.sleep(10000);
+        if(Wrapper.findWebElement(xpath_AssignmentPageValidation).isDisplayed()){
+            Assert.assertTrue(true, "Assignment details page is displayed successfully.");
+            Thread.sleep(3000);
+            // Wrapper.waitForpresenceOfElementLocated(xpath_AssignmentNumber);
+            // Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_AssignmentNumber), AssignmentNumber, false);
+            // Fill other details in Assignment page similarly by using the respective locators and test data from excel sheet.
+            Wrapper.scrollToElement(Wrapper.findWebElement(xpath_AssignmentNumber), "Assignment Number input field");
+            Thread.sleep(2000);
+            driver.findElement(xpath_AssignmentNumber).sendKeys(Keys.TAB);
+            Thread.sleep(10000);
+            Wrapper.waitForpresenceOfElementLocated(xpath_AssignmentNumber);
+            Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_AssignmentNumber), AssignmentNumber, false);
+            Wrapper.redwoodSync();
+
+            // Fill other details in Assignment page similarly by using the respective locators and test data from excel sheet.
+            Wrapper.waitForpresenceOfElementLocated(xpath_AssignmentStatusPicker);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(xpath_AssignmentStatusPicker)).click();
+            for(WebElement element: driver.findElements(xpath_AssignmentStatusList)){
+                if(element.getText().equals(AssignmentStatus)){
+                    Wrapper.waitForElementToBeClickable(element);
+                    Thread.sleep(2000);
+                    element.click();
+                    break;
+                }
+                Thread.sleep(3000);
+            }
+            Wrapper.waitForpresenceOfElementLocated(xpath_PersonTypePicker);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(xpath_PersonTypePicker)).click();
+            Thread.sleep(4000);
+            By personTypeOption = xpath_PersonTypeOption();
+            Wrapper.waitForpresenceOfElementLocated(personTypeOption);
+            Thread.sleep(2000);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(personTypeOption)).click();
+            Thread.sleep(3000);
+
+            Wrapper.waitForpresenceOfElementLocated(xpath_JobPicker);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(xpath_JobPicker)).click();
+            Thread.sleep(4000);
+            driver.findElement(xpath_JobManual).sendKeys(Job);
+            for(WebElement element: driver.findElements(xpath_JobList)){
+                if(element.getText().equals(Job)){
+                    Wrapper.waitForElementToBeClickable(element);
+                    element.click();
+                    Thread.sleep(3000);
+                    break;
+                }
+            }
+            Wrapper.redwoodSync();
+
+            Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_BusinessTitle), BusinessTitle, false);
+            
+            Wrapper.scrollToElement(Wrapper.findWebElement(xpath_GradePicker), "Grade dropdown");
+            Wrapper.waitForpresenceOfElementLocated(xpath_GradePicker);
+            Thread.sleep(4000);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(xpath_GradePicker)).click();
+            Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_GradeManual), Grade, false);
+            for(WebElement element: driver.findElements(xpath_GradeList)){
+                if(element.getText().equals(Grade)){
+                    Wrapper.waitForElementToBeClickable(element);
+                    // Thread.sleep(4000);
+                    element.click();
+                    Thread.sleep(4000);
+                    break;
+                }
+            }
+            Wrapper.redwoodSync();
+
+            Wrapper.waitForpresenceOfElementLocated(xpath_DepartmentPicker);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(xpath_DepartmentPicker)).click();
+            Thread.sleep(4000);
+            driver.findElement(xpath_DepartmentManual).sendKeys(Department);
+            for(WebElement element: driver.findElements(xpath_DepartmentList)){
+                if(element.getText().equals(Department)){
+                    Thread.sleep(10000);
+                    Wrapper.waitForElementToBeClickable(element);
+                    element.click();
+                    Thread.sleep(5000);
+                    break;
+                }
+            }
+            Wrapper.redwoodSync();
+
+            // Wrapper.scrollToElement(Wrapper.findWebElement(xpath_GradePicker), "Grade dropdown");
+            // Wrapper.waitForpresenceOfElementLocated(xpath_GradePicker);
+            // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(xpath_GradePicker)).click();
+            // Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_GradeManual), Grade, true);
+            // for(WebElement element: driver.findElements(xpath_GradeList)){
+            //     if(element.getText().equals(Grade)){
+            //         Wrapper.waitForElementToBeClickable(element);
+            //         // Thread.sleep(4000);
+            //         element.click();
+            //         break;
+            //     }
+            // }
+            // Wrapper.redwoodSync();
+
+            Wrapper.waitForpresenceOfElementLocated(xpath_ReportingEstablishmentPicker);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(xpath_ReportingEstablishmentPicker)).click();
+            driver.findElement(xpath_ReportingEstablishmentManual).sendKeys(ReportingEstablishment);
+            for(WebElement element: driver.findElements(xpath_ReportingEstablishmentList)){
+                if(element.getText().equals(ReportingEstablishment)){
+                    Wrapper.waitForElementToBeClickable(element);
+                    element.click();
+                    break;
+                }
+            }
+
+            Wrapper.waitForpresenceOfElementLocated(xpath_LocationPicker);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(xpath_LocationPicker)).click();
+            driver.findElement(xpath_LocationManual).sendKeys(Location);
+            for(WebElement element: driver.findElements(xpath_LocationList)){
+                if(element.getText().equals(Location)){
+                    Wrapper.waitForElementToBeClickable(element);
+                    Thread.sleep(3000);
+                    element.click();
+                    Thread.sleep(3000);
+                    break;
+                }
+            }
+            Wrapper.redwoodSync();
+
+            Wrapper.waitForpresenceOfElementLocated(xpath_WorkingAtHome);
+            Thread.sleep(5000);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(xpath_WorkingAtHome)).click();
+            By workingAtHomeOption = xpath_WorkingAtHomeOption();
+            Wrapper.waitForpresenceOfElementLocated(workingAtHomeOption);
+            Thread.sleep(3000);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(workingAtHomeOption)).click();
+            Thread.sleep(3000);
+
+            // Wrapper.waitForpresenceOfElementLocated(xpath_WorkerCategory);
+            // Thread.sleep(5000);
+            // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(xpath_WorkerCategory)).click();
+            // By workerCategoryOption = xpath_WorkerCategoryOption();
+            // Wrapper.waitForpresenceOfElementLocated(workerCategoryOption);
+            // Thread.sleep(5000);
+            // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(workerCategoryOption)).click();
+            // Thread.sleep(5000);
+
+            // Wrapper.scrollToElement(Wrapper.findWebElement(xpath_AssignmentCategory), "Assignment Category dropdown");
+            // Wrapper.waitForpresenceOfElementLocated(xpath_AssignmentCategory);
+            // Thread.sleep(5000);
+            // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(xpath_AssignmentCategory)).click();
+            // Thread.sleep(5000);
+            // By assignmentCategoryOption = xpath_AssignmentCategoryOption();
+            // Wrapper.waitForpresenceOfElementLocated(assignmentCategoryOption);
+            // Thread.sleep(5000);
+            // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(assignmentCategoryOption)).click();
+            // Thread.sleep(5000);
+            // Wrapper.scrollToElement(Wrapper.findWebElement(xpath_RegularTemporary), "Regular Temporary dropdown");
+            // Thread.sleep(3000);
+            // Wrapper.waitForpresenceOfElementLocated(xpath_RegularTemporary);
+            // Thread.sleep(5000);
+            // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(xpath_RegularTemporary)).click();
+            // Thread.sleep(3000);
+            // By regularTemporaryOption = xpath_RegularTemporaryOption();
+            // Wrapper.waitForpresenceOfElementLocated(regularTemporaryOption);
+            // Thread.sleep(3000);
+            // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(regularTemporaryOption)).click();
+            // Thread.sleep(5000);
+            // Wrapper.waitForpresenceOfElementLocated(xpath_FullTimePartTime);
+            // Thread.sleep(3000);
+            // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(xpath_FullTimePartTime)).click();
+            // Thread.sleep(3000);
+            // By fullTimePartTimeOption = xpath_FullTimePartTimeOption();
+            // Wrapper.waitForpresenceOfElementLocated(fullTimePartTimeOption);
+            // Thread.sleep(3000);
+            // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(fullTimePartTimeOption)).click();
+            // Thread.sleep(5000);
+
+            // Wrapper.redwoodSync();
+
+            // Wrapper.waitForpresenceOfElementLocated(xpath_HourlyPaidSalaried);
+            // Thread.sleep(3000);
+            // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(xpath_HourlyPaidSalaried)).click();
+            // Thread.sleep(3000);
+            // By hourlyPaidSalariedOption = xpath_HourlyPaidSalariedOption();
+            // Wrapper.waitForpresenceOfElementLocated(hourlyPaidSalariedOption);
+            // Thread.sleep(3000);
+            // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(hourlyPaidSalariedOption)).click();
+            // Thread.sleep(5000);
+            // Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_WorkingHours), ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Working_Hours"), true);
+            // Thread.sleep(3000);
+
+            // Wrapper.waitForpresenceOfElementLocated(xpath_WorkingHoursFrequency);
+            // Thread.sleep(3000);
+            // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(xpath_WorkingHoursFrequency)).click();
+            // By workingHoursFrequencyOption = xpath_WorkingHoursFrequencyOption();
+            // Wrapper.waitForpresenceOfElementLocated(workingHoursFrequencyOption);
+            // Thread.sleep(3000);
+            // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(workingHoursFrequencyOption)).click();
+            // Wrapper.redwoodSync();
+
+            // Wrapper.scrollToElement(Wrapper.findWebElement(xpath_UnionMember), "Union Member dropdown");
+            // Wrapper.waitForpresenceOfElementLocated(xpath_UnionMember);
+            // Thread.sleep(3000);
+            // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(xpath_UnionMember)).click();
+            // Thread.sleep(3000);
+            // By unionMemberOption = xpath_UnionMemberOption();
+            // Wrapper.waitForpresenceOfElementLocated(unionMemberOption);
+            // Thread.sleep(3000);
+            // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(unionMemberOption)).click();
+
+            // Wrapper.waitForpresenceOfElementLocated(xpath_Union);
+            // Thread.sleep(3000);
+            // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(xpath_Union)).click();
+            // Thread.sleep(3000);
+            // Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_UnionManual), ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Union"), true);
+            // for(WebElement element: driver.findElements(xpath_UnionList)){
+            //     if(element.getText().equals(ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Union"))){
+            //         Wrapper.waitForElementToBeClickable(element);
+            //         Thread.sleep(3000);
+            //         element.click();
+            //         Thread.sleep(3000);
+            //         break;
+            //     }
+            // }
+
+            Wrapper.waitForpresenceOfElementLocated(xpath_BargainingUnit);
+            Thread.sleep(3000);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(xpath_BargainingUnit)).click();
+            Thread.sleep(6000);
+            Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_BargainingUnitManual), ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Bargaining_Unit"), true);
+            for(WebElement element: driver.findElements(xpath_BargainingUnitList)){
+                if(element.getText().equals(ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Bargaining_Unit"))){
+                    Wrapper.waitForElementToBeClickable(element);
+                    Thread.sleep(3000);
+                    element.click();
+                    Thread.sleep(3000);
+                    break;
+                }
+            }
+            Wrapper.scrollToElement(Wrapper.findWebElement(xpath_OfficerCode), "Officer Code dropdown");
+            Thread.sleep(5000);
+            Wrapper.waitForpresenceOfElementLocated(xpath_OfficerCode);
+            Thread.sleep(4000);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(xpath_OfficerCode)).click();
+            Thread.sleep(5000);
+            By officerCodeOption = xpath_OfficerCodeOption();
+            Wrapper.waitForpresenceOfElementLocated(officerCodeOption);
+            Thread.sleep(5000);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(officerCodeOption)).click();
+            Thread.sleep(5000);
+
+
+            // // Wrapper.scrollToElement(Wrapper.findWebElement(xpath_GradePicker), "Grade dropdown");
+            // // Wrapper.waitForpresenceOfElementLocated(xpath_GradePicker);
+            // // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(xpath_GradePicker)).click();
+            // // Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_GradeManual), Grade, true);
+            // // for(WebElement element: driver.findElements(xpath_GradeList)){
+            // //     if(element.getText().equals(Grade)){
+            // //         Wrapper.waitForElementToBeClickable(element);
+            // //         Thread.sleep(4000);
+            // //         element.click();
+            // //         break;
+            // //     }
+            // // }
+
+
+            // // Wrapper.scrollToElement(Wrapper.findWebElement(xpath_ReportingEstablishmentPicker), "Reporting Establishment dropdown");
+            // // Wrapper.waitForpresenceOfElementLocated(xpath_ReportingEstablishmentPicker);
+            // // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(xpath_ReportingEstablishmentPicker)).click();
+            // // driver.findElement(xpath_ReportingEstablishmentManual).sendKeys(ReportingEstablishment);
+            // // for(WebElement element: driver.findElements(xpath_ReportingEstablishmentList)){
+            // //     if(element.getText().equals(ReportingEstablishment)){
+            // //         Wrapper.waitForElementToBeClickable(element);
+            // //         element.click();
+            // //         break;
+            // //     }
+            // // }
+
+            // // Wrapper.scrollToElement(Wrapper.findWebElement(xpath_AssignmentNumber), "Assignment Number input field");
+            // // Wrapper.waitForpresenceOfElementLocated(xpath_AssignmentNumber);
+            // // Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_AssignmentNumber), AssignmentNumber, false);
+            attachStepEvidence("the manager filled the details in Assignment page for hiring a new employee.");
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MSSContinueButton));
+        }else{
+            Assert.fail("Assignment details page is not displayed after clicking Continue button on Address details page.");
+        }
+    }
+
+    public void ManagerDetails(){
+        try{
+        // String ManagerName=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Manager_Name");
+        Wrapper.waitForpresenceOfElementLocated(xpath_MSSContinueButton);
+        Thread.sleep(20000);
+        if(Wrapper.findWebElement(xpath_MSSContinueButton).isDisplayed()){
+            Assert.assertTrue(true, "Manager details page is displayed successfully.");
+            attachStepEvidence("the manager filled the details in Manager details page for hiring a new employee.");
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MSSContinueButton));
+            Thread.sleep(10000);
+        }else{
+            Assert.fail("Manager details page is not displayed after clicking Continue button on Assignment details page.");
+        }
+    }catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    public void fillPayrollDetails() throws Exception{
+        //  String PayFrequency=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Pay_Frequency");
+        Wrapper.waitForpresenceOfElementLocated(xpath_PayrollDetailsPageValidation);
+        Thread.sleep(5000);
+        if(Wrapper.findWebElement(xpath_PayrollDetailsPageValidation).isDisplayed()){
+             Assert.assertTrue(true, "Payroll details page is displayed successfully.");
+             Wrapper.waitForpresenceOfElementLocated(xpath_HirePayrollButton);
+             Thread.sleep(3000);
+             Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(xpath_HirePayrollButton)).click();
+             Thread.sleep(5000);
+             Wrapper.waitForpresenceOfElementLocated(xpath_Payroll);
+             Thread.sleep(5000);
+             Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(xpath_Payroll)).click();
+             Thread.sleep(5000);
+             By payrollOption = xpath_PayrollOption();
+             Wrapper.waitForpresenceOfElementLocated(payrollOption);
+             Thread.sleep(8000);
+             Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(payrollOption)).click();
+             Thread.sleep(5000);
+
+             Wrapper.waitForpresenceOfElementLocated(xpath_TimeCardRequired);
+             Thread.sleep(3000);
+             Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(xpath_TimeCardRequired)).click();
+             Thread.sleep(5000);
+             By timeCardRequiredOption = xpath_TimeCardRequiredOption();
+             Thread.sleep(3000);
+             Wrapper.waitForpresenceOfElementLocated(timeCardRequiredOption);
+             Thread.sleep(8000);
+             Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(timeCardRequiredOption)).click();
+             Thread.sleep(5000);
+             attachStepEvidence("the manager filled the details in Payroll details page for hiring a new employee.");
+
+             Wrapper.clickWebElement(Wrapper.findWebElement(xpath_SaveButton));
+            Thread.sleep(8000);
+            //  Wrapper.waitForpresenceOfElementLocated(xpath_PrimaryValidationAfterSave);
+            Wrapper.waitForpresenceOfElementLocated(xpath_MSSContinueButton);
+            Thread.sleep(5000);
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MSSContinueButton));
+            Thread.sleep(10000);
+        }else{
+            Assert.fail("Payroll details page is not displayed after clicking Continue button on Manager details page.");
+        }
+    }
+
+    public void fillSalaryDetails() throws Exception{
+        //  String SalaryAmount=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Salary Amount");
+         String SalaryAmount="20";
+         Thread.sleep(5000);
+        Wrapper.waitForpresenceOfElementLocated(xpath_HireSalaryPageValidation);
+        Thread.sleep(5000);
+        if(Wrapper.findWebElement(xpath_HireSalaryPageValidation).isDisplayed()){
+            Assert.assertTrue(true, "Salary details page is displayed successfully.");
+            
+             Wrapper.waitForpresenceOfElementLocated(xpath_SalaryBasis);
+             Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(xpath_SalaryBasis)).click();
+             Thread.sleep(5000);
+             By salaryBasisOption = xpath_SalaryBasisOption();   
+             Wrapper.waitForpresenceOfElementLocated(salaryBasisOption);
+             Thread.sleep(5000);
+             Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(salaryBasisOption)).click();
+             Thread.sleep(5000);
+
+             Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_SalaryAmount), SalaryAmount, false);
+            Thread.sleep(5000);
+            attachStepEvidence("the manager filled the details in Salary details page for hiring a new employee.");
+
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MSSSubmitButton));
+            Thread.sleep(10000);
+        }else{
+            Assert.fail("Salary details page is not displayed after clicking Continue button on Payroll details page.");
+        }
+    }
+
+    //HRA Manager - Cancel  Work Relationship
+    //Call-->xpath_MyClientGroups
+    //Call-->xpathHRAShowMore
+    By xpath_CancelWorkRelationship=By.xpath("//*[@id='all_quickactions_groupNode_workforce_management']//div//a[text()='Cancel Work Relationship']");
+    By xpath_CancelWorkRelationshipPageValidation=By.xpath("//h1[contains(text(),'Cancel Work Relationship')]");
+    By xpath_CommentSection=By.xpath("//oj-text-area[contains(@id,'commentRichTextBox')]//textarea");
+    By xpath_CancelWRSubmitButton=By.xpath("//button[contains(@aria-labelledby,'cancel_wr')]//div/span[contains(text(),'Submit')]");
+
+    public void navigateToWorkRelationshipPage() throws Exception{
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MyClientGroups));
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpathHRAShowMore));
+        Wrapper.waitForpresenceOfElementLocated(xpath_CancelWorkRelationship);
+        attachStepEvidence("the manager clicked on Cancel Work Relationship option under My Client Groups.");
+        if(Wrapper.findWebElement(xpath_CancelWorkRelationship).isDisplayed()){
+            Assert.assertTrue(true, "Cancel Work Relationship option is displayed successfully under My Client Groups.");
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_CancelWorkRelationship));
+            //Continue with the steps to cancel work relationship by filling the required details and validate the cancellation of work relationship.
+        }else{
+            Assert.fail("Cancel Work Relationship option is not displayed under My Client Groups.");
+        }
+    }
+
+    public void cancelWorkRelationship() throws Exception{
+        String EmployeeName=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"First Name");
+        Wrapper.waitForpresenceOfElementLocated(xpath_CancelWorkRelationshipPageValidation);
+        if(Wrapper.findWebElement(xpath_CancelWorkRelationshipPageValidation).isDisplayed()){
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_EmployeeSearchBox));
+            Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_EmployeeSearchBox), EmployeeName, false);
+            if(Wrapper.findWebElement(HRAXpath(EmployeeName)).isDisplayed()){
+                
+                Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                        .elementToBeClickable(HRAXpath(EmployeeName))).click();
+            }
+            Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_CommentSection), "Cancelling work relationship for testing purpose.", false);
+            attachStepEvidence("the manager filled the details in Cancel Work Relationship page and submitted the cancellation request.");
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_CancelWRSubmitButton));
+        }else{
+            Assert.fail("Cancel Work Relationship page is not displayed after clicking on Cancel Work Relationship option under My Client Groups.");
+        }
+    }
+    
+
+    //MSS - Enter Employee Retirement
+    //My Team-->xpath_MyTeam
+    //Show More-->xpath_MSSShowMore
+    //Terminate Employment
+    By xpath_TerminateEmployment=By.xpath("//div[contains(@id,'all_quickactions_groupNode')]//a[text()='Terminate Employment']");
+    
+    By xpath_TerminateEmploymentPageValidation=By.xpath("//h1[contains(text(),'Terminate Employment')]");
+    //xpath_EmployeeSearchBox
+    //HRAXpath
+
+    //xpath_InfoToIncludePageValidation
+    By xpath_commentsAndAttachmentButton=By.xpath("//oj-switch//div[contains(@aria-label,'Comments and attachments')]");
+
+    By xpath_TerminateWhenAndWhyPageValidation=By.xpath("//span[contains(@aria-label,'When and why')]");
+    By xpath_TerminationNotificationDate=By.xpath("(//oj-input-date[contains(@class,'inputdatetime')]//span/span[contains(@title,'Select Date')])[1]");
+    By xpath_TerminationDate=By.xpath("(//oj-input-date[contains(@class,'inputdatetime')]//span/span[contains(@title,'Select Date')])[2]");
+    By xpath_TerminationDropDownsValidation=By.xpath("//oj-list-view[contains(@id,'listviewWR')]//div/span");
+    By xpath_TerminationAction=By.xpath("//oj-select-single[contains(@id,'TerminationActionId')]//span/span");
+    public By xpath_TerminationActionOption() throws Exception{
+        String TerminationAction=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Termination_Action");
+        String xpathValue="//div[contains(@id,'TerminationActionId')]//div[contains(text(),'test')]";
+        xpathValue= xpathValue.replace("test", TerminationAction);
+        return By.xpath(xpathValue);
+    }
+    By xpath_TerminationReason=By.xpath("//oj-select-single[contains(@id,'TerminationActionReasonId')]//span/span");
+    public By xpath_TerminationReasonOption() throws Exception{
+        String TerminationReason=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Termination_Reason");
+        String xpathValue="//div[contains(@id,'TerminationActionReasonId')]//div[contains(text(),'test')]";
+        xpathValue= xpathValue.replace("test", TerminationReason);
+        return By.xpath(xpathValue);
+    }
+    //xpath_MSSContinueButton
+
+    By xpath_WorkRelationshipTerminationInfoPageValidation=By.xpath("//span[contains(@aria-label,'Work relationship termination info')]");
+    By xpath_RevokeUserAccess=By.xpath("//oj-select-single[contains(@id,'RevokeUserAccess')]//span/span");
+    public By xpath_RevokeUserAccessOption() throws Exception{
+        String RevokeUserAccess=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Revoke_User_Access");
+        String xpathValue="//ul[contains(@aria-labelledby,'RevokeUserAccess')]//span[contains(text(),'test')]";
+        xpathValue= xpathValue.replace("test", RevokeUserAccess);
+        return By.xpath(xpathValue);
+    }
+    By xpath_RehireRecommendation=By.xpath("//oj-select-single[contains(@id,'RehireRecommendation')]//span/span");
+    public By xpath_RehireRecommendationOption() throws Exception{
+        String RehireRecommendation=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Rehire_Recommendation");
+        String xpathValue="//ul[contains(@aria-labelledby,'RehireRecommendation')]//span[contains(text(),'test')]";
+        xpathValue= xpathValue.replace("test", RehireRecommendation);
+        return By.xpath(xpathValue);
+    }
+    By xpath_LastWorkingDay=By.xpath("//div[contains(@aria-label,'Date Picker')]//parent::oj-input-date//span/span[contains(@title,'Select Date')]");
+    //xpath_MSSContinueButton
+
+    By xpath_CommentsAndAttachmentsPageValidation=By.xpath("//span[contains(@aria-label,'Comments and attachments')]");
+    By xpath_CommentsInputBox=By.xpath("//textarea[contains(@aria-label,'Comments')]");
+    By xpath_SaveComment=By.xpath("//button/div/span[contains(text(),'Save Comment')]");
+    By xpath_ClickCross=By.xpath("//oj-button[contains(@chroming,'borderless')]//span/span[contains(@slot,'startIcon')]");
+    By xpath_EditComment=By.xpath("//button/div/span[contains(text(),'Edit Comment')]");
+    //xpath_MSSContinueButton
+
+    By xpath_TerminateSeniortiyPageValidation=By.xpath("//span[contains(@aria-label,'Seniority dates')]");
+    //xpath_MSSSubmitButton
+
+    public void navigateToTerminateEmploymentPage() throws Exception{
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MyTeam));
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MSSShowMore));
+        Wrapper.waitForpresenceOfElementLocated(xpath_TerminateEmployment);
+        attachStepEvidence("the manager clicked on Terminate Employment option under My Team.");
+        if(Wrapper.findWebElement(xpath_TerminateEmployment).isDisplayed()){
+            Assert.assertTrue(true, "Terminate Employment option is displayed successfully under My Team.");
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_TerminateEmployment));
+        }else{
+            Assert.fail("Terminate Employment option is not displayed under My Team.");
+        }
+    }
+
+    public void searchEmployeeInTerminateEmploymentPage() throws Exception{
+        String EmployeeName=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"First Name");
+        Wrapper.waitForpresenceOfElementLocated(xpath_TerminateEmploymentPageValidation);
+        if(Wrapper.findWebElement(xpath_TerminateEmploymentPageValidation).isDisplayed()){
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_EmployeeSearchBox));
+            Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_EmployeeSearchBox), EmployeeName, false);
+            if(Wrapper.findWebElement(HRAXpath(EmployeeName)).isDisplayed()){
+                Assert.assertTrue(true, "Employee search functionality is working fine in Terminate Employment page.");
+                Wrapper.clickWebElement(Wrapper.findWebElement(HRAXpath(EmployeeName)));
+            }else{
+                Assert.fail("Employee search functionality is not working in Terminate Employment page.");
+            }
+        }else{
+            Assert.fail("Terminate Employment page is not displayed after clicking on Terminate Employment option under My Team.");
+        }
+    }
+
+    public void fillInfoPage(){
+        Wrapper.waitForpresenceOfElementLocated(xpath_InfoToIncludePageValidation);
+        if(Wrapper.findWebElement(xpath_InfoToIncludePageValidation).isDisplayed()){
+            Assert.assertTrue(true, "Info to include page is displayed successfully after clicking on an employee in Terminate Employment page.");
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_commentsAndAttachmentButton));
+            attachStepEvidence("the manager filled the details in Info to include page and submitted the termination request.");
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MSSContinueButton));
+        }else{
+            Assert.fail("Info to include page is not displayed after clicking on an employee in Terminate Employment page.");
+        }
+    }
+
+    public void fillTerminateWhenAndWhyPage() throws Exception{
+        String terminationNotificationDate=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Termination_Notification_Date");
+        String terminationDate=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Termination_Date");
+        Wrapper.waitForpresenceOfElementLocated(xpath_TerminateWhenAndWhyPageValidation);
+        if(Wrapper.findWebElement(xpath_TerminateWhenAndWhyPageValidation).isDisplayed()){
+            Assert.assertTrue(true, "When and why page is displayed successfully after clicking Continue button on Info to include page.");
+            Thread.sleep(10000);
+            Wrapper.selectDate(Wrapper.findWebElement(xpath_TerminationNotificationDate), terminationNotificationDate, xpath_ResignationRetirementDateValue, xpath_DatePickerMonth, xpath_DatePickerYear, xpath_DatePickerPrevious);
+            
+            Wrapper.waitForpresenceOfElementLocated(xpath_TerminationDropDownsValidation);
+            Thread.sleep(5000);
+            Wrapper.selectDate(Wrapper.findWebElement(xpath_TerminationDate), terminationDate, xpath_ResignationRetirementDateValue, xpath_DatePickerMonth, xpath_DatePickerYear, xpath_DatePickerNext);
+
+            if(Wrapper.findWebElement(xpath_TerminationDropDownsValidation).isDisplayed()){
+                Assert.assertTrue(true, "Action and Reason dropdowns are displayed successfully in When and why page.");
+                Wrapper.waitForpresenceOfElementLocated(xpath_TerminationAction);
+                Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(xpath_TerminationAction)).click();
+                Wrapper.redwoodSync();
+                By terminationActionOption = xpath_TerminationActionOption();
+                Wrapper.waitForpresenceOfElementLocated(terminationActionOption);
+                Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(terminationActionOption)).click();
+
+                Thread.sleep(5000);
+                Wrapper.scrollToElement(Wrapper.findWebElement(xpath_TerminationReason), "Termination Reason dropdown");
+                Wrapper.waitForpresenceOfElementLocated(xpath_TerminationReason);
+                Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(xpath_TerminationReason)).click();
+                Wrapper.redwoodSync();
+                By terminationReasonOption = xpath_TerminationReasonOption();
+                Wrapper.waitForpresenceOfElementLocated(terminationReasonOption);
+                Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(terminationReasonOption)).click();
+
+                attachStepEvidence("the manager filled the details in When and why page and submitted the termination request.");
+                Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MSSContinueButton));
+            }else{
+                Assert.fail("Action and Reason dropdowns are not displayed in When and why page.");
+            }
+            
+        }else{
+            Assert.fail("When and why page is not displayed after clicking Continue button on Info to include page.");
+        }
+    }
+
+    public void fillWorkRelationshipTerminationInfoPage() throws Exception{
+        Wrapper.waitForpresenceOfElementLocated(xpath_WorkRelationshipTerminationInfoPageValidation);
+        if(Wrapper.findWebElement(xpath_WorkRelationshipTerminationInfoPageValidation).isDisplayed()){
+            Assert.assertTrue(true, "Work relationship termination info page is displayed successfully after clicking Continue button on When and why page.");
+            
+            Wrapper.waitForpresenceOfElementLocated(xpath_RevokeUserAccess);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(xpath_RevokeUserAccess)).click();
+            By revokeUserAccessOption = xpath_RevokeUserAccessOption();
+            Wrapper.waitForpresenceOfElementLocated(revokeUserAccessOption);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(revokeUserAccessOption)).click();
+
+            Wrapper.scrollToElement(Wrapper.findWebElement(xpath_RehireRecommendation), "Rehire Recommendation dropdown");
+            Wrapper.waitForpresenceOfElementLocated(xpath_RehireRecommendation);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(xpath_RehireRecommendation)).click();
+            By rehireRecommendationOption = xpath_RehireRecommendationOption();
+            Wrapper.waitForpresenceOfElementLocated(rehireRecommendationOption);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(rehireRecommendationOption)).click();
+
+            String lastWorkingDay=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Last_Working_Day");
+            Thread.sleep(5000);
+            Wrapper.selectDate(Wrapper.findWebElement(xpath_LastWorkingDay), lastWorkingDay, xpath_ResignationRetirementDateValue, xpath_DatePickerMonth, xpath_DatePickerYear, xpath_DatePickerPrevious);
+
+            attachStepEvidence("the manager filled the details in Work relationship termination info page and submitted the termination request.");
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MSSContinueButton));
+        }else{
+            Assert.fail("Work relationship termination info page is not displayed after clicking Continue button on When and why page.");
+        }
+    }
+    
+    public void fillCommentsAndAttachmentsPage() throws Exception{
+        String comment=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Termination_Comment");
+        Wrapper.waitForpresenceOfElementLocated(xpath_CommentsAndAttachmentsPageValidation);
+        if(Wrapper.findWebElement(xpath_CommentsAndAttachmentsPageValidation).isDisplayed()){
+            Assert.assertTrue(true, "Comments and attachments page is displayed successfully after clicking Continue button on Work relationship termination info page.");
+            Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_CommentsInputBox), comment, false);
+            attachStepEvidence("the manager filled the details in Comments and attachments page and submitted the termination request.");
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_SaveComment));
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_ClickCross));
+            Wrapper.waitForpresenceOfElementLocated(xpath_EditComment);
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MSSContinueButton));
+        }else{
+            Assert.fail("Comments and attachments page is not displayed after clicking Continue button on Work relationship termination info page.");
+        }
+    }
+
+    public void submitTerminatePage() throws Exception{
+        Wrapper.waitForpresenceOfElementLocated(xpath_TerminateSeniortiyPageValidation);
+        if(Wrapper.findWebElement(xpath_TerminateSeniortiyPageValidation).isDisplayed()){
+            Assert.assertTrue(true, "Seniority dates page is displayed successfully after clicking Continue button on Comments and attachments page.");
+            attachStepEvidence("the manager filled the details in Seniority dates page and submitted the termination request.");
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MSSSubmitButton));
+        }else{
+            Assert.fail("Seniority dates page is not displayed after clicking Continue button on Comments and attachments page.");
+        }
+    }
+
+    //HRA - Direct Reports - Change
+    //xpath_MyClientGroups
+    //xpathHRAShowMore
+    By xpath_DirectReportsChange=By.xpath("//div[contains(@quickactioncategory,'grp_mcg_employment')]//a[text()='Direct Reports']");
+    
+    By xpath_DirectReportsChangePageValidation=By.xpath("//h1[contains(text(),'Direct Reports')]");
+    //xpath_EmployeeSearchBox
+    //HRAXpath
+
+    //xpath_InfoToIncludePageValidation
+    //xpath_commentsAndAttachmentButton
+    //xpath_MSSContinueButton
+
+    By xpath_DirectReportsChangeWhenAndWhyPageValidation=By.xpath("//span[contains(@aria-label,'When and why')]");
+    By xpath_ChangeStartDate=By.xpath("//div[contains(@aria-label,'Date Picker')]//parent::oj-input-date//span/span[contains(@title,'Select Date')]");
+    By xpath_WayToChange=By.xpath("//oj-select-single[contains(@id,'ActionId')]//span/span");
+    By xpath_WayToChangeList=By.xpath("//div[contains(@id,'ActionId')]//div[contains(@id,'ActionName')]");
+    By xpath_ReasonForChange=By.xpath("//oj-select-single[contains(@id,'ReasonId')]//span/span");
+    By xpath_ReasonForChangeList=By.xpath("//div[contains(@id,'ActionReasonId')]//div[contains(@id,'ActionReason_')]");
+    //xpath_MSSContinueButton
+
+    By xpath_DirectReportsInfoChangePageValidation=By.xpath("//span[contains(@aria-label,'Direct report')]");
+    By xpath_SearchPeopleToAddAsReports=By.xpath("//div[contains(@class,'oj-text-field-middle')]//input[contains(@id,'filter-workersLovSingleSelect')]");
+    By xpath_SearchPeopleToAddAsReportsManual=By.xpath("//div[contains(@class,'oj-text-field-middle')]//input[contains(@aria-labelledby,'workersLovSingleSelect')]");
+    public By xpath_SearchResultForPeopleToAddAsReport() throws Exception{
+        String ReportEmployeeName=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Report_Employee_Name");
+        String xpathValue="//oj-table[contains(@aria-label,'Workers List')]//span[contains(text(),'test')]";
+        xpathValue= xpathValue.replace("test", ReportEmployeeName);
+        return By.xpath(xpathValue);
+    }
+    //xpath_MSSContinueButton
+
+    //xpath_CommentsAndAttachmentsPageValidation
+    //xpath_CommentsInputBox
+    //xpath_SaveComment
+    //xpath_ClickCross
+    //xpath_EditComment
+    //xpath_MSSSubmitButton
+
+    public void navigateToDirectReportsPage() throws Exception{
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MyClientGroups));
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpathHRAShowMore));
+        Wrapper.waitForpresenceOfElementLocated(xpath_DirectReportsChange);
+        attachStepEvidence("the manager clicked on Direct Reports option under My Client Groups.");
+        if(Wrapper.findWebElement(xpath_DirectReportsChange).isDisplayed()){
+            Assert.assertTrue(true, "Direct Reports option is displayed successfully under My Client Groups.");
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_DirectReportsChange));
+            Thread.sleep(5000);
+        }else{
+            Assert.fail("Direct Reports option is not displayed under My Client Groups.");
+        }
+    }
+
+    public void searchEmployeeInDirectReportsPage() throws Exception{
+        String EmployeeName=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"First Name");
+        Wrapper.waitForpresenceOfElementLocated(xpath_DirectReportsChangePageValidation);
+        if(Wrapper.findWebElement(xpath_DirectReportsChangePageValidation).isDisplayed()){
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_EmployeeSearchBox));
+            Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_EmployeeSearchBox), EmployeeName, false);
+            if(Wrapper.findWebElement(HRAXpath(EmployeeName)).isDisplayed()){
+                Assert.assertTrue(true, "Employee search functionality is working fine in Direct Reports page.");
+                Wrapper.clickWebElement(Wrapper.findWebElement(HRAXpath(EmployeeName)));
+            }else{
+                Assert.fail("Employee search functionality is not working in Direct Reports page.");
+            }
+        }else{
+            Assert.fail("Direct Reports page is not displayed after clicking on Direct Reports option under My Client Groups.");
+        }
+    }
+
+    public void fillDirectReportsInfoToIncludePage() throws Exception{
+        Thread.sleep(5000);
+        Wrapper.waitForpresenceOfElementLocated(xpath_InfoToIncludePageValidation);
+        Thread.sleep(5000);
+        if(Wrapper.findWebElement(xpath_InfoToIncludePageValidation).isDisplayed()){
+            Assert.assertTrue(true, "Info to include page is displayed successfully after clicking on an employee in Direct Reports page.");
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_commentsAndAttachmentButton));
+            attachStepEvidence("the manager filled the details in Info to include page and submitted the change request.");
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MSSContinueButton));
+        }else{
+            Assert.fail("Info to include page is not displayed after clicking on an employee in Direct Reports page.");
+        }
+    }
+
+    public void fillDirectReportsChangeWhenAndWhyPage() throws Exception{
+        
+        String changeStartDate=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Change_Start_Date");
+        String wayToChange=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Way_To_Change");
+        String reasonForChange=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Reason_For_Change");
+        Thread.sleep(5000);
+        Wrapper.waitForpresenceOfElementLocated(xpath_DirectReportsChangeWhenAndWhyPageValidation);
+        Thread.sleep(5000);
+        if(Wrapper.findWebElement(xpath_DirectReportsChangeWhenAndWhyPageValidation).isDisplayed()){
+            Assert.assertTrue(true, "When and why page is displayed successfully after clicking on an employee in Direct Reports page.");
+            Thread.sleep(5000);
+            Wrapper.selectDate(Wrapper.findWebElement(xpath_ChangeStartDate), changeStartDate, xpath_ResignationRetirementDateValue, xpath_DatePickerMonth, xpath_DatePickerYear, xpath_DatePickerNext);
+            
+            Wrapper.waitForpresenceOfElementLocated(xpath_WayToChange);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(xpath_WayToChange)).click();
+            // Wrapper.redwoodSync();
+            for(WebElement option : driver.findElements(xpath_WayToChangeList)){
+                if(option.getText().equals(wayToChange)){
+                    Wrapper.waitForElementToBeClickable(option);
+                    option.click();
+                    break;
+                }
+            }
+
+            Thread.sleep(3000);
+            Wrapper.scrollToElement(Wrapper.findWebElement(xpath_ReasonForChange), "Reason for change dropdown");
+            Wrapper.waitForpresenceOfElementLocated(xpath_ReasonForChange);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(xpath_ReasonForChange)).click();
+            // Wrapper.redwoodSync();
+            for(WebElement option : driver.findElements(xpath_ReasonForChangeList)){
+                if(option.getText().equals(reasonForChange)){
+                    Wrapper.waitForElementToBeClickable(option);
+                    option.click();
+                    break;
+                }
+            }
+        }
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MSSContinueButton));
+    }
+
+    public void fillDirectReportsInfoChangePage() throws Exception{
+        String reportEmployeeName=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Report_Employee_Name");
+        Wrapper.waitForpresenceOfElementLocated(xpath_DirectReportsInfoChangePageValidation);
+        if(Wrapper.findWebElement(xpath_DirectReportsInfoChangePageValidation).isDisplayed()){
+            Assert.assertTrue(true, "Change direct report info page is displayed successfully after clicking Continue button on When and why page.");
+            Thread.sleep(10000);
+            Wrapper.waitForpresenceOfElementLocated(xpath_SearchPeopleToAddAsReportsManual);
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_SearchPeopleToAddAsReportsManual));
+            Thread.sleep(5000);
+            Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_SearchPeopleToAddAsReports), reportEmployeeName, false);
+            if(Wrapper.findWebElement(xpath_SearchResultForPeopleToAddAsReport()).isDisplayed()){
+                Assert.assertTrue(true, "Employee search functionality is working fine in Change direct report info page.");
+                Wrapper.clickWebElement(Wrapper.findWebElement(xpath_SearchResultForPeopleToAddAsReport()));
+            }else{
+                Assert.fail("Employee search functionality is not working in Change direct report info page.");
+            }
+            attachStepEvidence("the manager filled the details in Change direct report info page and submitted the change request.");
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MSSContinueButton));
+        }else{
+            Assert.fail("Change direct report info page is not displayed after clicking Continue button on When and why page.");
+        }
+    }
+
+    public void fillDirectReportsCommentsAndAttachmentsPage() throws Exception{
+        String comment=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Termination_Comment");
+        Wrapper.waitForpresenceOfElementLocated(xpath_CommentsAndAttachmentsPageValidation);
+        if(Wrapper.findWebElement(xpath_CommentsAndAttachmentsPageValidation).isDisplayed()){
+            Assert.assertTrue(true, "Comments and attachments page is displayed successfully after clicking Continue button on Change direct report info page.");
+            Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_CommentsInputBox), comment, false);
+            attachStepEvidence("the manager filled the details in Comments and attachments page and submitted the change request.");
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_SaveComment));
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_ClickCross));
+            Wrapper.waitForpresenceOfElementLocated(xpath_EditComment);
+            Thread.sleep(5000);
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MSSSubmitButton));
+        }else{
+            Assert.fail("Comments and attachments page is not displayed after clicking Continue button on Change direct report info page.");
+        }
+    }
+
+    //xpath_MyClientGroups
+    //xpathHRAShowMore
+    By xpath_HRA_Promote=By.xpath("//div[contains(@quickactioncategory,'grp_mcg_employment')]//a[text()='Promote']");
+    By xpath_HRA_PromotePageValidation=By.xpath("//h1[contains(text(),'Promote Employee')]");
+    //xpath_EmployeeSearchBox
+    //HRAXpath
+    //xpath_InfoToIncludePageValidation
+
+    //MSS - Ad Hoc Salary - Approve
+    By xpath_Tools=By.xpath("//a[text()='Tools']");
+    By xpath_WorkList=By.xpath(" //div[contains(@id,'groupNode_tools')]//div[contains(@id,'WORKLIST')]//*[local-name()='svg']");
+
+    By xpath_WorkListPageValidation=By.xpath("//h1[contains(text(),'Worklist')]");
+    By xpath_AdHocSalaryRequest=By.xpath("//table[contains(@summary,'Main Task List')]//td/a");
+
+    By xpath_AdHocSalaryApprove=By.xpath("//button[contains(text(),'Approve')]");
+    By xpath_AdHocSalaryApprovePageValidation=By.xpath("//h1[contains(text(),'Approve')]");
+    By xpath_AdHocSalaryApproveComments=By.xpath("//table//textarea");
+    By xpath_AdHocSalaryApproveSubmit=By.xpath("//a/span[contains(text(),'Submit')]");
+    
+    String parentWindow;
+    public void navigateToToolsPage() throws Exception{
+        driver.navigate().refresh();
+        Thread.sleep(10000);
+        driver.navigate().refresh();
+        Thread.sleep(10000);
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_Tools));
+        Thread.sleep(5000);
+        attachStepEvidence("the manager clicked on Tools menu.");
+    }
+
+    public void navigateToWorklistPage() throws Exception{
+        parentWindow = driver.getWindowHandle();
+        // driver.navigate().refresh();
+        // Thread.sleep(10000);
+        Wrapper.waitForpresenceOfElementLocated(xpath_WorkList);
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_WorkList));
+        // attachStepEvidence("the manager clicked on Worklist option under Tools menu.");
+    }
+
+    public void switchBetweenWindows() throws Exception{
+        
+        Set<String> allWindows = driver.getWindowHandles();
+        for (String window : allWindows) {
+            if (!window.equals(parentWindow)) {
+                driver.switchTo().window(window);
+                driver.manage().window().maximize();
+                break;
+            }
+        }
+    }
+    public void navigateToAdHocSalaryRequest() throws Exception{
+        Wrapper.waitForpresenceOfElementLocated(xpath_WorkListPageValidation);
+        if(Wrapper.findWebElement(xpath_WorkListPageValidation).isDisplayed()){
+            Assert.assertTrue(true, "Worklist page is displayed successfully after clicking on Worklist option under Tools menu.");
+            Wrapper.waitForpresenceOfElementLocated(xpath_AdHocSalaryRequest);
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_AdHocSalaryRequest));
+            System.out.println("Parent: " + driver.getWindowHandle());
+            Thread.sleep(5000);
+            attachStepEvidence("the manager clicked on Ad Hoc Salary Request link in Worklist page.");
+        }else{
+            Assert.fail("Worklist page is not displayed after clicking on Worklist option under Tools menu.");
+        }
+    }
+
+    public void approveAdHocSalaryRequest() throws Exception{
+        Thread.sleep(5000);
+        switchBetweenWindows();
+        
+        System.out.println("All handles: " + driver.getWindowHandles());
+        System.out.println("Child: " + driver.getWindowHandle());
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_AdHocSalaryApprove));
+        Thread.sleep(5000);
+        Wrapper.waitForpresenceOfElementLocated(xpath_AdHocSalaryApprovePageValidation);
+        if(Wrapper.findWebElement(xpath_AdHocSalaryApprovePageValidation).isDisplayed()){
+            Assert.assertTrue(true, "Ad Hoc Salary Approve page is displayed successfully after clicking on Ad Hoc Salary Request link in Worklist page.");
+            Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_AdHocSalaryApproveComments), "Approving this ad hoc salary request for testing purpose.", false);
+            attachStepEvidence("the manager filled the details in Ad Hoc Salary Approve page and approved the request.");
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_AdHocSalaryApproveSubmit));
+            Thread.sleep(10000);
+            driver.switchTo().window(parentWindow);
+            Thread.sleep(2000);
+            Wrapper.waitForpresenceOfElementLocated(xpath_WorkListPageValidation);
+        }else{
+            Assert.fail("Ad Hoc Salary Approve page is not displayed after clicking on Ad Hoc Salary Request link in Worklist page.");
+        }
+    }
+
+
+    //Compensation - Ad Hoc Salary - Approve
+    By xpath_Claim=By.xpath("//button[text()='Claim']");
+    //Call-->xpath_AdHocSalaryApprove
+    //Call-->xpath_AdHocSalaryApprovePageValidation
+    //Call-->xpath_AdHocSalaryApproveComments
+    //Call-->xpath_AdHocSalaryApproveSubmit
+
+    public void claimAdHocSalaryRequest() throws Exception{
+        Thread.sleep(5000);
+        switchBetweenWindows();
+        
+        System.out.println("All handles: " + driver.getWindowHandles());
+        System.out.println("Child: " + driver.getWindowHandle());
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_Claim));
+        Thread.sleep(5000);
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_AdHocSalaryApprove));
+        Thread.sleep(5000);
+        Wrapper.waitForpresenceOfElementLocated(xpath_AdHocSalaryApprovePageValidation);
+        if(Wrapper.findWebElement(xpath_AdHocSalaryApprovePageValidation).isDisplayed()){
+            Assert.assertTrue(true, "Ad Hoc Salary Approve page is displayed successfully after clicking on Ad Hoc Salary Request link in Worklist page.");
+            Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_AdHocSalaryApproveComments), "Approving this ad hoc salary request for testing purpose.", false);
+            attachStepEvidence("the manager filled the details in Ad Hoc Salary Approve page and approved the request.");
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_AdHocSalaryApproveSubmit));
+            Thread.sleep(10000);
+            driver.switchTo().window(parentWindow);
+            Thread.sleep(2000);
+            Wrapper.waitForpresenceOfElementLocated(xpath_WorkListPageValidation);
+        }else{
+            Assert.fail("Ad Hoc Salary Approve page is not displayed after clicking on Ad Hoc Salary Request link in Worklist page.");
+        }
+    }
+
+    //Hema new latest code
+     // @1279845 Scenario:ESS - Document Records View or download
+
+//document record:
+By xpath_DocumentRecord=By.xpath("(//*[text()='Document Records'])[2]");
+//document record link:
+By xpath_DocumentRecordLink=By.xpath("(//*[text()='Document Records'])[3]");
+//document record verify:
+By xpath_DocumentRecordVerify=By.xpath("//*[text()='Document Records']");
+//Birth certificate:
+By xpath_BirthCertificate=By.xpath("//a[text()='Enrollment document']");
+//download button:
+By xpath_DownloadButton=By.xpath("(//*[text()='Download']//..//..//..)[1]");
+// By xpath_DownloadButton=By.xpath("(//button[.//span[text()='Download']])[1]");
+//close button:
+By xpath_CloseButton=By.xpath("(//button[.//span[@slot='startIcon']])[2]");
+
+public void navigateToDocumentRecords() throws InterruptedException{
+        Wrapper.scrollToElement(Wrapper.findWebElement(xpath_ShowMore), "Show More");
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_ShowMore));
+        Thread.sleep(10000);
+        Wrapper.scrollToElement(Wrapper.findWebElement(xpath_DocumentRecord), "Document Records");
+        Wrapper.findWebElement(xpath_DocumentRecord).isDisplayed();
+        Thread.sleep(5000);
+        if(Wrapper.findWebElement(xpath_DocumentRecordLink).isDisplayed()){
+            Assert.assertTrue(true, "Document record link is displayed.");
+            Wrapper.scrollToElement(Wrapper.findWebElement(xpath_DocumentRecordLink), "Document Record Link");
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_DocumentRecordLink));
+            Thread.sleep(5000);
+            
+        }
+    }
+  public void validateDocumentRecordDetails() throws InterruptedException{
+    System.out.println("Validating Document Record details...");
+    // Wrapper.scrollToElement(Wrapper.findWebElement(xpath_DocumentRecordVerify), "Document Record Verify");
+    // Wrapper.waitForpresenceOfElementLocated(xpath_DocumentRecordVerify);
+    //    Wrapper.findWebElement(xpath_DocumentRecordVerify).isDisplayed();
+            // Assert.assertTrue(true, "Document Records page is displayed.");
+            Thread.sleep(10000);
+            Wrapper.scrollToElement(Wrapper.findWebElement(xpath_BirthCertificate), "Birth Certificate document record");
+            System.out.println("Scrolled to Birth Certificate document record.");
+            // Wrapper.waitForElementToBeClickable(Wrapper.findWebElement(xpath_BirthCertificate));
+            // System.out.println("Birth Certificate document record is clickable.");
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_BirthCertificate));
+            System.out.println("Clicked on Birth Certificate document record.");
+            // Wrapper.scrollToElement(Wrapper.findWebElement(xpath_DownloadButton), "Download Button");
+            // Wrapper.waitForElementToBeClickable(Wrapper.findWebElement(xpath_DownloadButton));  
+            //  Wrapper.clickWebElement(Wrapper.findWebElement(xpath_DownloadButton));
+            
+            
+        }
+
+        public void closeDocumentRecordDetails() throws InterruptedException{       
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_CloseButton));
+        }
+
+// Test CaseID: 1279846	ESS - My Activity Center
+
+//    My activityn center:
+  By xpath_MyActivityCenter=By.xpath("//*[text()='My Activity Center']");
+// payslip:
+ By xpath_Payslip=By.xpath("//*[text()='Payslip']");
+// paid on:
+By xpath_PaidOn=By.xpath("(//*[text()='Payslip']/../../../following-sibling::*)[2]");
+// salary:
+By xpath_ESSSalary=By.xpath("//*[text()='Salary']");
+// salary ..:
+By xpath_SalaryValue=By.xpath("(//*[text()='Salary']/../../../following-sibling::*)[2]");
+// Personal details:
+By xpath_PersonalDetails=By.xpath("//*[text()='Personal Details']/../../../../..");
+// journey:
+By xpath_Journeys=By.xpath("(//a[contains(@aria-label,'Journeys')])[1]");
+//bookmark:
+By xpath_Bookmark=By.xpath("//*[@class='oj-ux-ico-bookmark']");
+// go back:
+By xpath_GoBackFromJourneys=By.xpath("(//*[text()='My Journeys']/../../../preceding::div[1])[1]//button");
+// benefits:
+By xpath_Benefits=By.xpath("(//a[text()='Benefits'])[1]");
+// go back:
+By xpath_GoBackFromBenefits=By.xpath("(//*[text()='Benefits']/../../../preceding::div[1])[1]//button");
+// current job:
+By xpath_CurrentJob=By.xpath("(//a[text()='Current Jobs'])[1]");
+// go back:
+By xpath_GoBackFromOpportunityMarketplace=By.xpath("(//*[text()='Opportunity Marketplace']/../../../preceding::div[1])[1]//button");
+// personal details:
+
+By xpath_PersonalDetailsName=By.xpath("//*[text()='Personal Details']/../../../../..");
+By xpath_Name=By.xpath("(//*[text()='Name'])[1]");
+By xpath_DemographicInfo=By.xpath("(//*[text()='Demographic info'])[1]");
+By xpath_NationalIdentifier=By.xpath("(//*[text()='National identifiers'])[1]");
+By xpath_BiographicalInfo=By.xpath("(//*[text()='Biographical info'])[1]");
+By xpath_DisabilityInfo=By.xpath("(//*[text()='Disability info'])[1]");
+// go back:
+By xpath_GoBackFromPersonalDetails=By.xpath("//*[text()='Personal Details']/../../../preceding::div[1]//button");
+// Additional information:
+By xpath_AdditionalPersonInfo=By.xpath("//*[text()='Additional Person Info']/../../../../..");
+// additional information header verification:
+By xpath_AdditionalPersonInfoHeader=By.xpath("//*[text()='Additional Person Info']/..");
+// coned - drug test:
+By xpath_ConedDrugTest=By.xpath("(//*[text()='CONED_DRUG_TEST'])[1]");
+// (//*[text()='CONED_DRUG_TEST'])[1]
+
+// additional information go back:
+By xpath_GoBackFromAdditionalPersonInfo=By.xpath("//*[text()='Additional Person Info']/../../../preceding::div[1]//button");
+// personal identifier for external application:
+By xpath_PersonalIdentifierForExternalApplications=By.xpath("//*[text()='Person Identifiers for External Applications']/../../../../..");
+// personal identifier for external application header verification:
+By xpath_PersonalIdentifierForExternalApplicationsHeader=By.xpath("//*[text()='Person Identifiers for External Applications']/..");
+// personal identifier for external application go back:
+By xpath_GoBackFromPersonalIdentifierForExternalApplications=By.xpath("//*[text()='Person Identifiers for External Applications']/../../../preceding::div[1]//button");
+//contact Info:
+By xpath_ContactInfo=By.xpath("//*[text()='Contact Info']/../../../../..");
+//phone details:
+By xpath_PhoneDetails=By.xpath("(//*[text()='Phone details'])[1]");
+//Email Address
+By xpath_EmailDetails=By.xpath("(//*[text()='Email details'])[1]");
+//Address:
+//By xpath_Address=By.xpath("(//*[text()='Address'])[1]");
+//Contact info go back
+By xpath_GoBackFromContactInfo=By.xpath("//*[text()='Contact Info']/../../../preceding::div[1]//button");
+
+//Family and Emergency Contacts
+By xpath_FamilyAndEmergencyContacts=By.xpath("//*[text()='Family and Emergency Contacts']/../../../../..");
+//Family and Emergency Contacts go back
+By xpath_GoBackFromFamilyAndEmergencyContacts=By.xpath("//*[text()='Family and Emergency Contacts']/../../../preceding::div[1]//button");
+
+//Document Records
+By xpath_DocumentRecords=By.xpath("//*[text()='Document Records']/../../../../..");
+//Document Records go back
+By xpath_GoBackFromDocumentRecords=By.xpath("//*[text()='Document Records']/../../../preceding::div[1]//button");
+
+//view more:
+By xpath_ViewMore=By.xpath("//*[text()='View More']");
+
+//Quick action cross symbol:
+By xpath_QuickActionCrossSymbol=By.xpath("(//*[text()='Quick actions']/../../following-sibling::*/*//button)[2]");
+
+//list view:
+By xpath_ListView=By.xpath("(//*[@data-oj-container='ojButtonset']/*)[1]");
+//timeline view:
+By xpath_TimelineView=By.xpath("(//*[@data-oj-container='ojButtonset']/*)[2]");
+
+//change salary verify:
+By xpath_ChangeSalary=By.xpath("//*[text()='Change Salary']");
+
+//go back button
+By xpath_GoBackButton=By.xpath("//button[@aria-label='Go back']");
+
+public void navigateToMyActivityCenter() throws InterruptedException{
+        System.out.println("Navigating to My Activity Center...");
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MyActivityCenter));
+        Thread.sleep(20000);
+        System.out.println("Navigating to My Activity Center2...");
+    }
+    public void validateMyActivityCenterDetails(){
+        // System.out.println("Validating Payslip");
+        // Wrapper.waitForpresenceOfElementLocated(xpath_Payslip);
+        // if(Wrapper.findWebElement(xpath_Payslip).isDisplayed()){
+        //     Assert.assertTrue(true, "Payslip link is displayed on My Activity Center.");
+        //     String paidOn = Wrapper.findWebElement(xpath_PaidOn).getText();
+            String salary = Wrapper.findWebElement(xpath_ESSSalary).getText();
+            String salaryValue = Wrapper.findWebElement(xpath_SalaryValue).getText();
+            System.out.println("Salary Value: " + salaryValue);
+        //     boolean isMyActivityCenterDetailsDisplayed= !paidOn.isEmpty() && !salary.isEmpty() && !salaryValue.isEmpty(); 
+            
+        //     Assert.assertTrue(isMyActivityCenterDetailsDisplayed, "Paid On date, Salary label, and Salary value are displayed correctly on My Activity Center.");
+            
+        // }else{
+        //     Assert.fail("Payslip link is not displayed on My Activity Center.");
+        // }
+    }
+    public void navigateToAndValidateJourneys() throws InterruptedException{
+        Thread.sleep(4000);
+        System.out.println("Navigating to Journeys page...");
+       WebElement journeysElement = Wrapper.findWebElement(xpath_Journeys);
+        Wrapper.waitForElementToBeClickable(journeysElement);
+        Wrapper.scrollToElement(journeysElement, "Journeys");
+        Wrapper.clickWebElement(journeysElement);
+    
+        Thread.sleep(4000);
+        if(Wrapper.findWebElement(xpath_Bookmark).isDisplayed()){
+            Assert.assertTrue(true, "Successfully navigated to Journeys page.");
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_GoBackFromJourneys));
+        }else{
+            Assert.fail("Failed to navigate to Journeys page.");
+        }
+    }
+    public void navigateToAndValidateBenefits() throws InterruptedException{
+        Wrapper.scrollToElement(Wrapper.findWebElement(xpath_Benefits), "Benefits");
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_Benefits));
+        Thread.sleep(4000);
+        if(Wrapper.findWebElement(xpath_GoBackFromBenefits).isDisplayed()){
+            Assert.assertTrue(true, "Successfully navigated to Benefits page.");
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_GoBackFromBenefits));
+            Thread.sleep(4000);
+        }else{
+            Assert.fail("Failed to navigate to Benefits page.");
+        }
+    }
+    public void navigateToAndValidateCurrentJob() throws InterruptedException{
+        Thread.sleep(4000);
+        WebElement currentJobElement = Wrapper.findWebElement(xpath_CurrentJob);
+        Wrapper.scrollToElement(currentJobElement, "Current Job");
+        Wrapper.clickWebElement(currentJobElement);
+        Thread.sleep(4000);
+        if(Wrapper.findWebElement(xpath_GoBackFromOpportunityMarketplace).isDisplayed()){
+            Assert.assertTrue(true, "Successfully navigated to Current Job page.");
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_GoBackFromOpportunityMarketplace));
+                Thread.sleep(4000);
+        }else{
+            Assert.fail("Failed to navigate to Current Job page.");
+        }
+    }
+    public void navigateToAndValidatePersonalDetails() throws InterruptedException{
+       WebElement personalDetailsElement = Wrapper.findWebElement(xpath_PersonalDetails);
+       Wrapper.scrollToElement(personalDetailsElement, "Personal Details");
+        Wrapper.waitForElementToBeClickable(personalDetailsElement);
+        Wrapper.clickWebElement(personalDetailsElement);
+        System.out.println("Navigating to Personal Details page...");
+        Thread.sleep(4000);
+        if(Wrapper.findWebElement(xpath_PersonalDetailsName).isDisplayed() && Wrapper.findWebElement(xpath_DemographicInfo).isDisplayed() && Wrapper.findWebElement(xpath_NationalIdentifier).isDisplayed() && Wrapper.findWebElement(xpath_BiographicalInfo).isDisplayed() && Wrapper.findWebElement(xpath_DisabilityInfo).isDisplayed()){
+            Assert.assertTrue(true, "Successfully navigated to Personal Details page and all sections are displayed.");
+             Wrapper.scrollToElement(Wrapper.findWebElement(xpath_PersonalDetailsName), "Personal Details Name");
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_GoBackFromPersonalDetails));
+            Thread.sleep(4000);
+            System.out.println("Navigated back from Personal Details page.");
+        }else{
+            Assert.fail("Failed to navigate to Personal Details page or some sections are not displayed.");
+        }
+    }
+    public void navigateToAndValidateAdditionalPersonInfo() throws InterruptedException{
+        Thread.sleep(5000);
+        WebElement additionalPersonInfoElement = Wrapper.findWebElement(xpath_AdditionalPersonInfo);
+        Wrapper.scrollToElement(additionalPersonInfoElement, "Additional Person Info");
+        Wrapper.waitForElementToBeClickable(additionalPersonInfoElement);
+        Wrapper.clickWebElement(additionalPersonInfoElement);
+        System.out.println("Navigating to Additional Person Info page...");
+        Thread.sleep(4000);
+        Wrapper.findWebElement(xpath_AdditionalPersonInfoHeader).isDisplayed();
+            System.out.println("Additional Person Info header is displayed.");
+            Assert.assertTrue(true, "Successfully navigated to Additional Person Info page.");
+            String header = Wrapper.findWebElement(xpath_AdditionalPersonInfoHeader).getText();
+            Assert.assertEquals(header, "Additional Person Info", "Additional Person Info header is displayed correctly.");
+            Thread.sleep(4000);
+            // if(Wrapper.findWebElement(xpath_ConedDrugTest).isDisplayed()){
+            //     // Assert.assertTrue(true, "Coned Drug Test section is displayed on Additional Person Info page.");
+            // Wrapper.waitForElementToBeVisible(Wrapper.findWebElement(xpath_ConedDrugTest));
+            // Wrapper.findWebElement(xpath_ConedDrugTest).isDisplayed();
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_GoBackFromAdditionalPersonInfo));
+            
+        // }else{
+        //     Wrapper.clickWebElement(Wrapper.findWebElement(xpath_GoBackFromAdditionalPersonInfo));
+            
+        // }
+       
+    }
+    public void navigateToAndValidatePersonalIdentifierForExternalApplications() throws InterruptedException{
+        Thread.sleep(5000);
+        WebElement personalIdentifierForExternalApplicationsElement = Wrapper.findWebElement(xpath_PersonalIdentifierForExternalApplications);
+        Wrapper.scrollToElement(personalIdentifierForExternalApplicationsElement, "Personal Identifier for External Applications");
+        Wrapper.waitForElementToBeClickable(personalIdentifierForExternalApplicationsElement);
+        Wrapper.clickWebElement(personalIdentifierForExternalApplicationsElement);
+        System.out.println("Navigating to Personal Identifier for External Applications page...");
+        Thread.sleep(4000);
+        if(Wrapper.findWebElement(xpath_PersonalIdentifierForExternalApplicationsHeader).isDisplayed()){
+            System.out.println("Personal Identifier for External Applications page is displayed.");
+            Assert.assertTrue(true, "Successfully navigated to Personal Identifier for External Applications page.");
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_GoBackFromPersonalIdentifierForExternalApplications));
+            Thread.sleep(4000);
+        }else{
+            Assert.fail("Failed to navigate to Personal Identifier for External Applications page.");
+        }
+    }
+    public void navigateToAndValidateContactInfo() throws InterruptedException{
+        Thread.sleep(4000);
+        Wrapper.scrollToElement(Wrapper.findWebElement(xpath_ContactInfo), "Contact Info");
+        Wrapper.waitForElementToBeClickable(Wrapper.findWebElement(xpath_ContactInfo));
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_ContactInfo));
+        // if(Wrapper.findWebElement(xpath_PhoneDetails).isDisplayed() && Wrapper.findWebElement(xpath_EmailDetails).isDisplayed() && Wrapper.findWebElement(xpath_Address).isDisplayed()){
+        //     Assert.assertTrue(true, "Successfully navigated to Contact Info page and Phone Details, Email Details, and Address sections are displayed.");
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_GoBackFromContactInfo));
+        // }else{
+        //     Assert.fail("Failed to navigate to Contact Info page or some sections are not displayed.");
+        // }
+       
+     }
+     public void navigateToAndValidateFamilyAndEmergencyContacts() throws InterruptedException{
+        Thread.sleep(20000);
+        Wrapper.scrollToElement(Wrapper.findWebElement(xpath_FamilyAndEmergencyContacts), "Family and Emergency Contacts");
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_FamilyAndEmergencyContacts));
+        Thread.sleep(4000);
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_GoBackFromFamilyAndEmergencyContacts));
+          Thread.sleep(4000);    
+     }
+     public void navigateToAndValidateDocumentRecords() throws InterruptedException{
+        Thread.sleep(20000);
+        Wrapper.scrollToElement(Wrapper.findWebElement(xpath_DocumentRecords), "Document Records");
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_DocumentRecords));
+        Thread.sleep(4000);
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_GoBackFromDocumentRecords));
+            Thread.sleep(4000);  
+     }
+     public void validateViewMoreAndListTimelineView() throws InterruptedException{
+        Thread.sleep(4000);
+        Wrapper.scrollToElement(Wrapper.findWebElement(xpath_ViewMore), "View More");
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_ViewMore));
+        Thread.sleep(4000);
+        if(Wrapper.findWebElement(xpath_QuickActionCrossSymbol).isDisplayed()){
+            Assert.assertTrue(true, "Quick Action cross symbol is displayed after clicking View More.");
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_QuickActionCrossSymbol));
+            Thread.sleep(4000);
+            System.out.println("Clicked on Quick Action cross symbol to close the expanded view.");
+        }else{
+            Assert.fail("Quick Action cross symbol is not displayed after clicking View More.");
+        }
+    //     if(Wrapper.findWebElement(xpath_ListView).isDisplayed()){
+    //         Assert.assertTrue(true, "List view is displayed.");
+    //     }else{
+    //         Assert.fail("List view is not displayed.");
+    //     }
+    //     if(Wrapper.findWebElement(xpath_TimelineView).isDisplayed()){
+    //         System.out.println("Timeline view is displayed.");
+    //         Assert.assertTrue(true, "Timeline view is displayed.");
+    //     }else{
+    //         Assert.fail("Timeline view is not displayed.");
+    //     }
+      }
+
+      //delete record:
+
+//my client:
+By xpath_MyClientGroupsHRA = By.xpath("//a[text()='My Client Groups']");
+//personal management:
+By xpath_PersonManagement = By.xpath("//*[text()='Person Management']");
+//person number:
+By xpath_PersonNumber = By.xpath("//*[@id='_FOpt1:_FOr1:0:_FONSr2:0:MAt1:0:pt1:Perso1:0:SP3:q1:value10::content']");
+//Search:
+By xpath_SearchButton = By.xpath("//button[text()='Search']");
+//link:
+By xpath_BlevinsSpencer = By.xpath("//a[text()='Blevins, Spencer']");
+//edit
+By xpath_Edit = By.xpath("//a[@title='Edit']");
+//delete record:
+By xpath_DeleteRecord = By.xpath("//*[text()='Delete Record']");
+//validate :
+By xpath_ValidateDelete = By.xpath("//*[text()='The selected date-effective record will be deleted. The other date-effective records will remain.']");
+//ok:
+By xpath_OkButton = By.xpath("//button[@id='_FOpt1:_FOr1:0:_FONSr2:0:MAt1:0:pt1:Manag1:0:AP1:cb2']");
+
+public void deletePersonalRecord() throws Exception{
+     
+        driver.get("https://ejcu-dev1.fa.us6.oraclecloud.com/fscmUI/faces/FuseWelcome");
+       
+        driver.manage().window().maximize();
+
+            Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_UserName), "Ce.0028523", false);
+            Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_Password), "s2gr33nuWkgm*", false);  
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_SigninButton));
+
+        Wrapper.waitForpresenceOfElementLocated(xpath_MyClientGroupsHRA);
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MyClientGroupsHRA));
+        //click on person management link
+        Wrapper.scrollToElement(Wrapper.findWebElement(xpath_PersonManagement), "Person Management");
+        Wrapper.waitForpresenceOfElementLocated(xpath_PersonManagement);
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_PersonManagement));
+        //search person number:
+        Wrapper.waitForpresenceOfElementLocated(xpath_PersonNumber);
+        Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_PersonNumber), "0085243", false);
+        Wrapper.scrollToElement(Wrapper.findWebElement(xpath_SearchButton), "Search Button");
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_SearchButton));
+        Thread.sleep(5000);
+        //click on person link:
+        Wrapper.scrollToElement(Wrapper.findWebElement(xpath_BlevinsSpencer), "Blevins, Spencer link");
+        Wrapper.waitForpresenceOfElementLocated(xpath_BlevinsSpencer);
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_BlevinsSpencer));
+
+        //click on edit:
+        Wrapper.waitForpresenceOfElementLocated(xpath_Edit);
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_Edit));
+        //click on delete record:
+        Wrapper.waitForpresenceOfElementLocated(xpath_DeleteRecord);
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_DeleteRecord));
+        //validate delete pop up:
+        Wrapper.waitForpresenceOfElementLocated(xpath_ValidateDelete);
+        Wrapper.findWebElement(xpath_ValidateDelete).isDisplayed();
+        //click on ok:
+        Wrapper.waitForElementToBeClickable(Wrapper.findWebElement(xpath_OkButton));
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_OkButton));
+
+}
+
+
+      //1279848 -Scenario:ESS - Name Change - Submit
+
+//personal info:
+By xpath_PersonalInfo=By.xpath("//*[text()='Personal Info']");
+//personal detail:
+By xpath_PersonalDetail=By.xpath("(//*[text()='Personal Details'])[2]");
+//pencil icon:
+By xpath_PencilIcon=By.xpath("//h2[text()='Name']//..//following-sibling::*//button[@class='oj-button-button']");
+// By xpath_PencilIcon=By.xpath("(//button[.//span[@slot='startIcon']])[4]");
+//comment box:
+By xpath_CommentBox=By.xpath("//*[@aria-label='Comments']");
+//drag-drop:
+By xpath_DragDrop=By.xpath("//*[@class='oj-filepicker-dropzone ']");
+//save button:
+By xpath_NameChangeSaveButton=By.xpath("//button[contains(@aria-labelledby,'ButtonSave')]");
+
+     //1279848 -Scenario:ESS - Name Change - Submit
+     public void navigateToNameChange() throws InterruptedException{
+         Wrapper.scrollToElement(Wrapper.findWebElement(xpath_ShowMore), "Show More");
+         Wrapper.waitForpresenceOfElementLocated(xpath_ShowMore);
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_ShowMore));
+         Thread.sleep(2000);
+        // Wrapper.scrollToElement(Wrapper.findWebElement(xpath_PersonalInfo), "Personal Info");
+        Wrapper.findWebElement(xpath_PersonalInfo).isDisplayed();
+    //    Wrapper.setSize();
+    //    Wrapper.disableChromeScallingIssue();
+         Thread.sleep(5000);
+        Wrapper.scrollToElement(Wrapper.findWebElement(xpath_PersonalDetail), "Personal Details");
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_PersonalDetail));
+        Thread.sleep(10000);
+        Wrapper.scrollToElement(Wrapper.findWebElement(xpath_PencilIcon), "Pencil Icon for Name Change");
+        Wrapper.waitForElementToBeClickable(Wrapper.findWebElement(xpath_PencilIcon));
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_PencilIcon));
+        Thread.sleep(5000);
+     }
+
+        public void enterNameChangeDetails(String Comment) throws InterruptedException{
+        //    if(Wrapper.findWebElement(xpath_CommentBox).isDisplayed() && Wrapper.findWebElement(xpath_DragDrop).isDisplayed()){
+        //     // Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_CommentBox), Comment);
+        //    Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+        //         .elementToBeClickable(xpath_NameChangeSaveButton)).click();
+            Thread.sleep(5000);
+        }
+    
+
+
+    
+//HRA - Name Change Approve - Submit
+//tools
+// By xpath_Tools = By.xpath("//*[text()='Tools']");
+//Worklist
+By xpath_Worklist = By.xpath("//*[text()='Worklist']");
+//link:
+By xpath_ChangedPersonalInformation = By.xpath("(//a[contains(text(),'Changed Personal Information')])[1]");
+//Claim:
+// By xpath_Claim = By.xpath("//*[text()='Claim']");
+
+public void navigateToWorklist() throws InterruptedException{
+    Wrapper.scrollToElement(Wrapper.findWebElement(xpath_Tools), "Tools");
+    Wrapper.waitForElementToBeClickable(Wrapper.findWebElement(xpath_Tools));
+    Wrapper.clickWebElement(Wrapper.findWebElement(xpath_Tools));
+    Wrapper.waitForpresenceOfElementLocated(xpath_Worklist);
+    Wrapper.clickWebElement(Wrapper.findWebElement(xpath_Worklist));
+
+
+}
+public void approvingNameChange() throws InterruptedException{
+    // Wrapper.waitForpresenceOfElementLocated(xpath_ChangedPersonalInformation);
+    // Wrapper.clickWebElement(Wrapper.findWebElement(xpath_ChangedPersonalInformation));
+    Thread.sleep(10000);
+
+// String parentWindow = driver.getWindowHandle();
+//        Set<String> allWindows = driver.getWindowHandles();
+//        for (String window : allWindows) {
+//            if (!window.equals(parentWindow)) {
+//                driver.switchTo().window(window);
+//                System.out.println("Switched to Child Window: " + driver.getTitle());
+//            }
+//        }
+
+      
+
+//     Wrapper.waitForpresenceOfElementLocated(xpath_Claim);
+//     Wrapper.clickWebElement(Wrapper.findWebElement(xpath_Claim));
+
+//      // Switch back to parent window
+//        driver.switchTo().window(parentWindow);
+//        System.out.println("Back to Parent Window: " + driver.getTitle());
+
+
+}
+
+        // Test Case 1279850: ESS - Name Change - Validate
+// //personal info:
+// By xpath_PersonalInfo=By.xpath("//*[text()='Personal Info']");
+// //personal detail:
+// By xpath_PersonalDetail=By.xpath("(//*[text()='Personal Details'])[2]");
+//get name:
+By xpath_GetName=By.xpath("(//*[text()='Personal Details']//..//following-sibling::*)[2]");
+//verify first name:
+By xpath_VerifyFirstName=By.xpath("(//*[text()='First Name']//..//..//..//following-sibling::*)[1]");
+    
+public void navigateToPersonalInfo() throws InterruptedException{
+    Wrapper.scrollToElement(Wrapper.findWebElement(xpath_ShowMore), "Show More");
+    Wrapper.waitForElementToBeClickable(Wrapper.findWebElement(xpath_ShowMore));
+    Wrapper.clickWebElement(Wrapper.findWebElement(xpath_ShowMore));
+    Thread.sleep(2000);
+    Wrapper.scrollToElement(Wrapper.findWebElement(xpath_PersonalInfo), "Personal Info");
+    Wrapper.waitForElementToBeClickable(Wrapper.findWebElement(xpath_PersonalInfo));
+    Wrapper.clickWebElement(Wrapper.findWebElement(xpath_PersonalInfo));
+    Thread.sleep(10000);
+
+
+}
+public void navigateToPersonalDetails() throws InterruptedException{
+    Wrapper.scrollToElement(Wrapper.findWebElement(xpath_PersonalDetail), "Personal Details");
+    Wrapper.waitForElementToBeClickable(Wrapper.findWebElement(xpath_PersonalDetail));
+    Wrapper.clickWebElement(Wrapper.findWebElement(xpath_PersonalDetail));
+    Thread.sleep(10000);
+
+
+}
+public void validateNameChange() throws InterruptedException{
+    String actualName=Wrapper.getText(Wrapper.findWebElement(xpath_GetName));
+    System.out.println("Actual Name: " + actualName);
+    String actualFirstName=Wrapper.getText(Wrapper.findWebElement(xpath_VerifyFirstName));
+    System.out.println("Actual First Name: " + actualFirstName);
+   if(actualName.contains(actualFirstName)){
+        Assert.assertTrue(true, "First name is updated successfully.");
+    }else{
+        Assert.fail("First name is not updated. Expected: " + actualFirstName + ", Actual: " + actualFirstName);
+    }
+
+
+}
+
+//MSS - Transfer - Approve or Deny
+
+//link name:
+By xpath_KaneAdamLink = By.xpath("(//a[contains(text(),'Kane Adam')])[1]");
+
+public void navigateToWorklistMss() throws InterruptedException{
+    Wrapper.scrollToElement(Wrapper.findWebElement(xpath_Tools), "Tools");
+    Wrapper.waitForElementToBeClickable(Wrapper.findWebElement(xpath_Tools));
+    Wrapper.clickWebElement(Wrapper.findWebElement(xpath_Tools));
+    Wrapper.waitForpresenceOfElementLocated(xpath_Worklist);
+    Wrapper.clickWebElement(Wrapper.findWebElement(xpath_Worklist));
+
+
+}
+public void approvingNameChangeMss() throws InterruptedException{
+   
+// Wrapper.scrollToElement(Wrapper.findWebElement(xpath_KaneAdamLink), "Kane Adam Link");
+//     Wrapper.waitForElementToBeClickable(Wrapper.findWebElement(xpath_KaneAdamLink));
+//     Wrapper.clickWebElement(Wrapper.findWebElement(xpath_KaneAdamLink));
+
+
+// String parentWindow = driver.getWindowHandle();
+//        Set<String> allWindows = driver.getWindowHandles();
+//        for (String window : allWindows) {
+//            if (!window.equals(parentWindow)) {
+//                driver.switchTo().window(window);
+//                System.out.println("Switched to Child Window: " + driver.getTitle());
+//            }
+//        }
+
+      
+
+//     Wrapper.waitForpresenceOfElementLocated(xpath_Claim);
+//     Wrapper.clickWebElement(Wrapper.findWebElement(xpath_Claim));
+
+//      // Switch back to parent window
+//        driver.switchTo().window(parentWindow);
+//        System.out.println("Back to Parent Window: " + driver.getTitle());
+
+
+}
+
+
+//HRA - Promote - Initiate
+
+//my client group
+//By xpath_MyClientGroups = By.xpath("//*[text()='My Client Groups']");
+//Showmore:
+//By xpath_ShowMore = By.xpath("(//*[text()='Show More'])[3]");
+//Promote:
+ By xpath_PromoteLink = By.xpath("//*[text()='Employment']//..//following-sibling::div//*[text()='Promote']");
+//promote validation::
+By xpath_PromotePageValidation = By.xpath("//*[text()='Promote']");
+
+//place holder:
+By xpath_SearchByNameHolder = By.xpath("//*[@placeholder='Search by Name, Business Title, Work Email, or Person Number']");
+
+By xpath_Promote = By.xpath("//*[text()='Employment']//..//following-sibling::div//*[text()='Promote']");
+public void navigateToPromotePage(String EmployeeName) throws Exception{
+                    Thread.sleep(5000);
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MyClientGroups));
+            Thread.sleep(5000);
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpathHRAShowMore));
+            Thread.sleep(5000);
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_PromoteLink));
+    Wrapper.clickWebElement(Wrapper.findWebElement(xpath_SearchByNameHolder));
+                Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_SearchByNameHolder), EmployeeName, false);
+                if(Wrapper.findWebElement(HRAXpath(EmployeeName)).isDisplayed()){
+                    Thread.sleep(5000);
+                    Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                            .elementToBeClickable(HRAXpath(EmployeeName))).click();
+
+     
+
+}
+            
+                    
+                }
+           
+
+
+
+//Salary:
+By xpath_SalaryToggleButton = By.xpath("//oj-switch//div[contains(@aria-label,'Salary')]");
+//continue button:
+By xpath_HRAContinueButton = By.xpath("//button[@aria-label='Continue']");
+
+public void selectSalaryToggleButton() throws Exception{
+    Wrapper.scrollToElement(Wrapper.findWebElement(xpath_SalaryToggleButton), "Salary Toggle Button");
+    Wrapper.waitForElementToBeClickable(Wrapper.findWebElement(xpath_SalaryToggleButton));
+    Wrapper.clickWebElement(Wrapper.findWebElement(xpath_SalaryToggleButton));
+
+   
+Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(xpath_MSSContinueButton)).click();
+}
+//when and why:
+By xpath_WhenAndWhyValidate = By.xpath("(//*[text()='When and why'])[1]");
+//when is the employee set date:
+By xpath_SelectDate = By.xpath("//span[@title='Select Date.']");
+//whats the way to promote
+By xpath_WhatsTheWayToPromote = By.xpath("//oj-select-single[contains(@id,'ActionId')]//span/span");
+//why are u promoting
+By xpath_WhyAreYouPromoting = By.xpath("//oj-select-single[contains(@id,'ActionReasonId')]//span/span");
+//continue button:
+//By xpath_ContinueButton = By.xpath("//button[@aria-label='Continue']");
+
+public void verifyWhenAndWhyPageDetailsAndContinue() throws Exception{
+    Wrapper.waitForpresenceOfElementLocated(xpath_WhenAndWhyValidate);
+    Wrapper.findWebElement(xpath_WhenAndWhyValidate).isDisplayed();
+
+    //select date
+    Wrapper.selectDate(
+            Wrapper.findWebElement(xpath_SelectDate),
+            "6/April/2026",
+            xpath_ResignationRetirementDateValue,
+            xpath_DatePickerMonth,
+            xpath_DatePickerYear,
+            xpath_DatePickerPrevious
+        );
+
+ Wrapper.waitForpresenceOfElementLocated(xpath_WhatsTheWayToPromote);
+        Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(xpath_WhatsTheWayToPromote)).click();
+ 
+        // Select "Promotion"
+        By actionOption = xpath_ReasonSelection("Promotion");
+        Wrapper.waitForpresenceOfElementLocated(actionOption);
+        Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(actionOption)).click();
+ 
+        // Open Reason dropdown
+        Wrapper.waitForpresenceOfElementLocated(xpath_WhyAreYouPromoting);
+        Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(xpath_WhyAreYouPromoting)).click();
+ 
+        // Select "Excellent Performance"
+        By reasonOption = xpath_ReasonSelection("Career Ladder Promotion");
+        Wrapper.waitForpresenceOfElementLocated(reasonOption);
+        Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(reasonOption)).click();
+
+                // Click Continue
+               
+Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(xpath_MSSContinueButton)).click();
+        
+    }
+//assignment
+By xpath_AssignmentValidate = By.xpath("(//span[text()='Assignment'])[1]");
+//job id:(Manager)
+By xpath_JobId = By.xpath("//oj-select-single[contains(@id,'JobId')]//span/span");
+//gradeid:(Band 2H)
+By xpath_GradeId = By.xpath("//oj-select-single[contains(@id,'GradeId')]//span/span");
+//compensation indicator:(Over Maximum OM1)
+By xpath_CompensationIndicator = By.xpath("//oj-select-single[contains(@id,'compensationIndicator')]//span/span");
+//continue
+
+public void verifyAssignmentPageDetailsAndContinue() throws InterruptedException{
+    Wrapper.waitForpresenceOfElementLocated(xpath_JobId);
+    // Select Job ID
+    // Wrapper.waitForpresenceOfElementLocated(xpath_JobId);
+    // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+    //         .elementToBeClickable(xpath_JobId)).click();
+
+    // By jobOption = xpath_ReasonSelection("Manager");
+    // Wrapper.waitForpresenceOfElementLocated(jobOption);
+    // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+    //         .elementToBeClickable(jobOption)).click();
+
+    // // Select Grade ID
+    // Wrapper.waitForpresenceOfElementLocated(xpath_GradeId);
+    // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+    //         .elementToBeClickable(xpath_GradeId)).click();
+
+    // By gradeOption = xpath_ReasonSelection("Band 2H");
+    // Wrapper.waitForpresenceOfElementLocated(gradeOption);
+    // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+    //         .elementToBeClickable(gradeOption)).click();
+
+    // // Select Compensation Indicator
+    // Wrapper.waitForpresenceOfElementLocated(xpath_CompensationIndicator);
+    // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+    //         .elementToBeClickable(xpath_CompensationIndicator)).click();
+
+    // By compensationOption = xpath_ReasonSelection("Over Maximum OM1");
+    // Wrapper.waitForpresenceOfElementLocated(compensationOption);
+    // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+    //         .elementToBeClickable(compensationOption)).click();
+
+                // Click Continue
+              
+Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(xpath_MSSContinueButton)).click();
+}
+//Salary:
+By xpath_SalaryValidate = By.xpath("(//*[text()='Salary'])[1]");
+//salary basis:
+ By xpath_SalaryBasispage = By.xpath("//*[text()='Salary Amount']");
+//continue:
+
+public void salaryPageDetailsAndContinue() throws InterruptedException{
+   
+Wrapper.waitForpresenceOfElementLocated(xpath_SalaryBasispage);
+    // // Select Salary Basis
+    // Wrapper.waitForpresenceOfElementLocated(xpath_SalaryBasis);
+    // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+    //         .elementToBeClickable(xpath_SalaryBasis)).click();
+
+    // By salaryBasisOption = xpath_ReasonSelection("Regular Salary");
+    // Wrapper.waitForpresenceOfElementLocated(salaryBasisOption);
+    // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+    //         .elementToBeClickable(salaryBasisOption)).click();
+Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(xpath_MSSContinueButton)).click();
+
+}
+
+//seniority dates:
+By xpath_SeniorityDates = By.xpath("(//*[text()='Consolidated Edison Inc'])[1]");
+//submit:
+By xpath_SubmitButtonFinal = By.xpath("//button[@aria-label='Submit']");
+
+public void verifySeniorityDatesAndSubmit() throws InterruptedException{
+     Wrapper.waitForpresenceOfElementLocated(xpath_SeniorityDates);
+    // Wrapper.findWebElement(xpath_SeniorityDates).isDisplayed();
+Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(xpath_SubmitButtonFinal)).click();
+}
+
+
+
+//HRA-Non-Worker-Surviving_Spouse-Add
+//New person
+By xpath_NewPerson = By.xpath("//*[text()='New Person']");
+//Add a non worker
+By xpath_AddNonWorker = By.xpath("(//*[text()='Add a Nonworker'])[2]");
+//communication info toggle button
+By xpath_CommunicationInfoToggle = By.xpath("//oj-switch//div[contains(@aria-label,'Communication info')]");
+//Addresse toggle button
+By xpath_AddressesToggle = By.xpath("//oj-switch//div[contains(@aria-label,'Addresses')]");
+//work relationship toggle button
+By xpath_WorkRelationshipToggle = By.xpath("//oj-switch//div[contains(@aria-label,'Work relationship')]");
+//Payroll details toggle button:
+By xpath_PayrollDetailsToggle = By.xpath("//oj-switch//div[contains(@aria-label,'Payroll')]");
+//Salary toggle button:
+By xpath_SalaryToggleButtonHRA = By.xpath("//oj-switch//div[contains(@aria-label,'Salary')]");
+//continue:
+
+public void navigateToAddNonWorker() throws InterruptedException{
+    Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MyClientGroups));
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpathHRAShowMore)); 
+   Wrapper.findWebElement(xpath_NewPerson).isDisplayed();
+Thread.sleep(5000);
+    Wrapper.scrollToElement(Wrapper.findWebElement(xpath_AddNonWorker), "Add a Nonworker");
+    Wrapper.waitForElementToBeClickable(Wrapper.findWebElement(xpath_AddNonWorker));
+    Wrapper.clickWebElement(Wrapper.findWebElement(xpath_AddNonWorker));
+    Thread.sleep(5000);
+    // Click Continue
+        //         Wrapper.scrollToElement(Wrapper.findWebElement(xpath_HRAContinueButton), "Continue Button on first page");
+        // Wrapper.waitForpresenceOfElementLocated(xpath_HRAContinueButton);    
+        // Wrapper.clickWebElement(Wrapper.findWebElement(xpath_HRAContinueButton));
+}
+
+public void selectToggleButtonsForNonWorker() throws InterruptedException{
+    Wrapper.scrollToElement(Wrapper.findWebElement(xpath_CommunicationInfoToggle), "Communication Info Toggle");
+    Wrapper.waitForElementToBeClickable(Wrapper.findWebElement(xpath_CommunicationInfoToggle));
+    Wrapper.clickWebElement(Wrapper.findWebElement(xpath_CommunicationInfoToggle));
+    Thread.sleep(2000);
+    Wrapper.scrollToElement(Wrapper.findWebElement(xpath_AddressesToggle), "Addresses Toggle");
+    Wrapper.waitForElementToBeClickable(Wrapper.findWebElement(xpath_AddressesToggle));
+    Wrapper.clickWebElement(Wrapper.findWebElement(xpath_AddressesToggle));
+Thread.sleep(2000);
+    Wrapper.scrollToElement(Wrapper.findWebElement(xpath_WorkRelationshipToggle), "Work Relationship Toggle");
+    Wrapper.waitForElementToBeClickable(Wrapper.findWebElement(xpath_WorkRelationshipToggle));
+    Wrapper.clickWebElement(Wrapper.findWebElement(xpath_WorkRelationshipToggle));
+Thread.sleep(2000);
+    Wrapper.scrollToElement(Wrapper.findWebElement(xpath_PayrollDetailsToggle), "Payroll Details Toggle");
+    Wrapper.waitForElementToBeClickable(Wrapper.findWebElement(xpath_PayrollDetailsToggle));
+    Wrapper.clickWebElement(Wrapper.findWebElement(xpath_PayrollDetailsToggle));
+Thread.sleep(2000);
+    Wrapper.scrollToElement(Wrapper.findWebElement(xpath_SalaryToggleButtonHRA), "Salary Toggle Button");
+    Wrapper.waitForElementToBeClickable(Wrapper.findWebElement(xpath_SalaryToggleButtonHRA));
+    Wrapper.clickWebElement(Wrapper.findWebElement(xpath_SalaryToggleButtonHRA));
+Thread.sleep(2000);
+     Wrapper.scrollToElement(Wrapper.findWebElement(xpath_HRAContinueButton), "Continue Button on first page");
+        Wrapper.waitForpresenceOfElementLocated(xpath_HRAContinueButton);    
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_HRAContinueButton));
+}
+//when and Why page validation
+By xpath_WhenAndWhyValidateHRA = By.xpath("(//*[text()='When and why'])[1]");
+//select date:
+By xpath_SelectDateHRA = By.xpath("//span[@title='Select Date.']");
+//legal employer(ConEd Company of New York – Pension)
+By xpath_LegalEmployerHRA = By.xpath("//oj-select-single[contains(@id,'LegalEntityId')]//span/span");
+//whats the way to add a non worker(Add Non‑Worker)
+By xpath_AddNonWorkerHRA = By.xpath("//oj-select-single[contains(@id,'ActionId')]//span/span");
+//why are you adding coworker(Creation of Non‑Worker)
+By xpath_WhyAreYouAddingCoworker = By.xpath("//oj-select-single[contains(@id,'ActionReasonId')]//span/span");
+//Business unit(Retirement)
+By xpath_BusinessUnitHRA = By.xpath("//oj-select-single[contains(@id,'BusinessUnitId')]//span/span");
+//position:
+By xpath_PositionHRA = By.xpath("//oj-select-single[contains(@id,'PositionId')]//span/span");
+//noworker type(Retiree)
+By xpath_NonWorkerTypeHRA = By.xpath("//oj-select-single[contains(@id,'ProposedNonWorkerType')]//span/span");
+//continue
+
+public void verifyWhenAndWhyPageDetailsForNonWorkerAndContinue() throws Exception{
+    Wrapper.waitForpresenceOfElementLocated(xpath_WhenAndWhyValidateHRA);
+    Wrapper.findWebElement(xpath_WhenAndWhyValidateHRA).isDisplayed();
+
+    //select date
+    Wrapper.selectDate(
+            Wrapper.findWebElement(xpath_SelectDateHRA),
+            "6/April/2026",
+            xpath_ResignationRetirementDateValue,
+            xpath_DatePickerMonth,
+            xpath_DatePickerYear,
+            xpath_DatePickerPrevious
+        );
+
+        // Select Legal Employer
+        Wrapper.waitForpresenceOfElementLocated(xpath_LegalEmployerHRA);
+        Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(xpath_LegalEmployerHRA)).click();
+Thread.sleep(5000);
+        By legalEmployerOption = xpath_ReasonSelection("Con Edison Company of New York");
+        Wrapper.waitForpresenceOfElementLocated(legalEmployerOption);
+        Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(legalEmployerOption)).click();
+                Thread.sleep(5000);
+
+        // Select Way to Add Non-Worker
+        Wrapper.waitForpresenceOfElementLocated(xpath_AddNonWorkerHRA);
+        Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(xpath_AddNonWorkerHRA)).click();
+
+        By addNonWorkerOption = xpath_ReasonSelection("Add nonworker");
+        Wrapper.waitForpresenceOfElementLocated(addNonWorkerOption);
+        Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(addNonWorkerOption)).click();
+ Thread.sleep(2000);
+        // Select Reason for Adding Non-Worker
+        Wrapper.waitForpresenceOfElementLocated(xpath_WhyAreYouAddingCoworker);
+        Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(xpath_WhyAreYouAddingCoworker)).click();
+
+        By reasonOption = xpath_ReasonSelection("Creation of Non-Worker");
+        Wrapper.waitForpresenceOfElementLocated(reasonOption);
+        Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(reasonOption)).click();
+// Thread.sleep(20000);
+                // Select Business Unit
+                Wrapper.waitForpresenceOfElementLocated(xpath_BusinessUnitHRA);
+                Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                        .elementToBeClickable(xpath_BusinessUnitHRA)).click();
+
+                By businessUnitOption = xpath_ReasonSelection("CE People & Supply Chain");
+                Wrapper.waitForpresenceOfElementLocated(businessUnitOption);
+                Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                        .elementToBeClickable(businessUnitOption)).click();
+ Thread.sleep(2000);
+                        // Select Non-Worker Type
+                        Wrapper.scrollToElement(Wrapper.findWebElement(xpath_NonWorkerTypeHRA), "Non-Worker Type Dropdown");
+                        Wrapper.waitForpresenceOfElementLocated(xpath_NonWorkerTypeHRA);
+                    
+                Wrapper.waitForpresenceOfElementLocated(xpath_NonWorkerTypeHRA);
+                Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                        .elementToBeClickable(xpath_NonWorkerTypeHRA)).click();
+
+                By nonWorkerTypeOption = By.xpath("(//span[contains(text(),'Retiree')])[1]");
+                Wrapper.waitForpresenceOfElementLocated(nonWorkerTypeOption);
+                Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                        .elementToBeClickable(nonWorkerTypeOption)).click();
+
+Thread.sleep(2000);
+                // Click Continue
+
+Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(xpath_HRAContinueButton)).click();
+}
+
+//Personal details:
+By personalDetailsValidation = By.xpath("(//*[text()='Personal details'])[1]");
+//verify
+By generatedAutomatically = By.xpath("//*[text()='Generated automatically']");
+//last name:
+By lastName = By.xpath("//*[text()='Last Name']//..//..//..//following-sibling::input[@class='oj-inputtext-input oj-text-field-input oj-component-initnode']"); 
+//first name:
+By firstName = By.xpath("//*[text()='First Name']//..//..//..//following-sibling::input[@class='oj-inputtext-input oj-text-field-input oj-component-initnode']");
+//Gender:
+By gender = By.xpath("//*[contains(@id,'person-bio-gender-lov-addperson-bio-create-dyn-form')]//span/span");
+//DOB
+By DateOfBirth = By.xpath("(//span[@title='Select Date.'])[1]");
+//continue
+public void verifyPersonalDetailsPageAndContinue() throws Exception{
+    Thread.sleep(5000);
+     Wrapper.waitForpresenceOfElementLocated(gender);
+    // Wrapper.findWebElement(personalDetailsValidation).isDisplayed();
+
+    // Wrapper.waitForpresenceOfElementLocated(generatedAutomatically);
+    // Wrapper.findWebElement(generatedAutomatically).isDisplayed();
+
+    Wrapper.waitForpresenceOfElementLocated(lastName);
+    Wrapper.findWebElement(lastName).sendKeys("Roy");
+
+    // Wrapper.waitForpresenceOfElementLocated(firstName);
+    // Wrapper.findWebElement(firstName).sendKeys("Janie");
+
+    // // Select Non-Worker Type
+    //             Wrapper.waitForpresenceOfElementLocated(xpath_NonWorkerTypeHRA);
+    //             Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+    //                     .elementToBeClickable(xpath_NonWorkerTypeHRA)).click();
+
+    //             By nonWorkerTypeOption = xpath_ReasonSelection("Female");
+    //             Wrapper.waitForpresenceOfElementLocated(nonWorkerTypeOption);
+    //             Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+    //                     .elementToBeClickable(nonWorkerTypeOption)).click();
+
+    //                     //select date
+    // Wrapper.selectDate(
+    //         Wrapper.findWebElement(DateOfBirth),
+    //         "6/April/2010",
+    //         xpath_ResignationRetirementDateValue,
+    //         xpath_DatePickerMonth,
+    //         xpath_DatePickerYear,
+    //         xpath_DatePickerPrevious
+    //     );
+    Wrapper.scrollToElement(Wrapper.findWebElement(xpath_HRAContinueButton), "Continue Button on first page");
+    Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(xpath_HRAContinueButton)).click();
+    
+}
+
+
+//  Wrapper.scrollToElement(Wrapper.findWebElement(xpath_HRAContinueButton), "Continue Button on first page");
+//     Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+//                 .elementToBeClickable(xpath_HRAContinueButton)).click();
+
+//communication info
+By communicationInfo = By.xpath("(//*[text()='Communication info'])[1]");
+//continue
+
+public void verifyCommunicationInfoPageAndContinue() throws Exception{
+    // Wrapper.waitForpresenceOfElementLocated(communicationInfo);
+    // Wrapper.findWebElement(communicationInfo).isDisplayed();
+Thread.sleep(50000);
+     Wrapper.scrollToElement(Wrapper.findWebElement(xpath_HRAContinueButton), "Continue Button on first page");
+        Wrapper.waitForpresenceOfElementLocated(xpath_HRAContinueButton);    
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_HRAContinueButton));
+
+}
+
+//address
+By xpath_addressesValidationHRA = By.xpath("(//*[text()='Addresses'])[1]");
+//continue
+
+public void verifyAddressesPageAndContinue() throws Exception{
+    // Wrapper.waitForpresenceOfElementLocated(xpath_addressesValidationHRA);
+    // Wrapper.findWebElement(xpath_addressesValidationHRA).isDisplayed();
+Thread.sleep(50000);
+     Wrapper.scrollToElement(Wrapper.findWebElement(xpath_HRAContinueButton), "Continue Button on first page");
+        Wrapper.waitForpresenceOfElementLocated(xpath_HRAContinueButton);    
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_HRAContinueButton));
+}
+
+//Assignment validation:
+By assignmentValidation = By.xpath("(//*[text()='Assignment'])[1]");
+//person type(Surviving Spouse - Lumpsum - Benefit Eligible)
+By personType = By.xpath("//oj-select-single[contains(@id,'UserPersonTypeId')]//span/span");
+//continue
+
+public void verifyAssignmentPageDetailsForNonWorkerAndContinue() throws Exception{
+    // Wrapper.waitForpresenceOfElementLocated(assignmentValidation);
+    // Wrapper.findWebElement(assignmentValidation).isDisplayed();
+Thread.sleep(50000);
+    // // Select Person Type
+    // Wrapper.waitForpresenceOfElementLocated(personType);
+    // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+    //         .elementToBeClickable(personType)).click();
+
+    // By personTypeOption = xpath_ReasonSelection("Surviving Spouse - Lumpsum - Benefit Eligible");
+    // Wrapper.waitForpresenceOfElementLocated(personTypeOption);
+    // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+    //         .elementToBeClickable(personTypeOption)).click();
+
+                // Click Continue
+                Wrapper.scrollToElement(Wrapper.findWebElement(xpath_HRAContinueButton), "Continue Button on first page");
+        Wrapper.waitForpresenceOfElementLocated(xpath_HRAContinueButton);    
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_HRAContinueButton));
+}
+
+//work relationship info validation
+By workRelationshipInfo = By.xpath("(//*[text()='Work relationship info'])[1]");
+//1-9 status(Ready to verify)
+By i9Status = By.xpath("//oj-select-single[contains(@id,'addPersonWorkRelationshipsDDF.US._I9_STATUS')]//span/span");
+//E-verify status(Employment Authorized)
+By eVerifyStatus = By.xpath("//oj-select-single[contains(@id,'_E_VERIFY_STATUS')]//span/span");
+//continue
+
+public void verifyWorkRelationshipInfoPageDetailsForNonWorkerAndContinue() throws Exception{
+    // Wrapper.waitForpresenceOfElementLocated(workRelationshipInfo);
+    // Wrapper.findWebElement(workRelationshipInfo).isDisplayed();
+
+    // // Select I-9 Status
+    // Wrapper.waitForpresenceOfElementLocated(i9Status);
+    // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+    //         .elementToBeClickable(i9Status)).click();
+
+    // By i9StatusOption = xpath_ReasonSelection("Ready to verify");
+    // Wrapper.waitForpresenceOfElementLocated(i9StatusOption);
+    // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+    //         .elementToBeClickable(i9StatusOption)).click();
+
+    // // Select E-Verify Status
+    // Wrapper.waitForpresenceOfElementLocated(eVerifyStatus);
+    // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+    //         .elementToBeClickable(eVerifyStatus)).click();
+
+    // By eVerifyStatusOption = xpath_ReasonSelection("Employment Authorized");
+    // Wrapper.waitForpresenceOfElementLocated(eVerifyStatusOption);
+    // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+    //         .elementToBeClickable(eVerifyStatusOption)).click();
+Thread.sleep(50000);
+                // Click Continue
+                Wrapper.scrollToElement(Wrapper.findWebElement(xpath_HRAContinueButton), "Continue Button on first page");
+        Wrapper.waitForpresenceOfElementLocated(xpath_HRAContinueButton);    
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_HRAContinueButton));
+}
+//payroll details validation:
+By payrollDetails = By.xpath("(//*[text()='Payroll details'])[1]");
+//continue
+
+public void verifyPayrollDetailsPageForNonWorkerAndContinue() throws Exception{
+    // Wrapper.waitForpresenceOfElementLocated(payrollDetails);
+    // Wrapper.findWebElement(payrollDetails).isDisplayed();
+Thread.sleep(50000);
+     Wrapper.scrollToElement(Wrapper.findWebElement(xpath_HRAContinueButton), "Continue Button on first page");
+        Wrapper.waitForpresenceOfElementLocated(xpath_HRAContinueButton);    
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_HRAContinueButton));
+}
+
+//salary
+By salary = By.xpath("(//*[text()='Salary'])[1]");
+//salary basis(Monthly Pension)
+By salaryBasis = By.xpath("//oj-select-single[contains(@id,'basisSingleSelect')]//span/span");
+//submit
+By submitButton = By.xpath("//button[@aria-label='Submit']");
+
+public void verifySalaryPageForNonWorkerAndSubmit() throws Exception{
+    // Wrapper.waitForpresenceOfElementLocated(salary);
+    // Wrapper.findWebElement(salary).isDisplayed();
+
+    // // Select Salary Basis
+    // Wrapper.waitForpresenceOfElementLocated(salaryBasis);
+    // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+    //         .elementToBeClickable(salaryBasis)).click();
+
+    // By salaryBasisOption = xpath_ReasonSelection("Monthly Pension");
+    // Wrapper.waitForpresenceOfElementLocated(salaryBasisOption);
+    // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+    //         .elementToBeClickable(salaryBasisOption)).click();
+Thread.sleep(50000);
+                // Click Submit
+                Wrapper.scrollToElement(Wrapper.findWebElement(submitButton), "Submit Button");
+        Wrapper.waitForpresenceOfElementLocated(submitButton);    
+        Wrapper.clickWebElement(Wrapper.findWebElement(submitButton));
+
+}
+
+
+
+
+// @1279854  Scenario:HRA - Change Assignment - Management to Union
+
+
+//show more
+By xpath_ShowMoreButton=By.xpath("(//*[text()='Show More'])[3]");
+//employment:
+By xpath_Employment=By.xpath("//*[text()='Employment']");
+//change assignment:
+By xpath_ChangeAssignment=By.xpath("(//*[text()='Change Assignment'])[3]");
+// //employee search box:
+//  By xpath_EmployeeSearchBox=By.xpath("//*[@placeholder='Search by Name, Business Title, Work Email, or Person Number']");
+//employee name:
+By xpath_EmployeeName=By.xpath("//*[text()='Kristian Edmonds']");
+//direct name:
+By xpath_DirectName=By.xpath("(//td[contains(@class,'oj-table-data-cell')]//a)[1]");
+//salary toggle:
+By xpath_SalaryToggle=By.xpath("(//*[text()='Salary']//following-sibling::*)[2]");
+//continue
+By xpath_ContinueFirstPage=By.xpath("//*[text()='Continue']");
+//dateselector for when the assignment change starts:
+By xpath_DateSelector=By.xpath("//span[@title='Select Date.']");
+// //when does the assignmentchange start:
+// By xpath_AssignmentChangeStart=By.xpath("//*[@title='Select Date.']");
+//whats the way to change assignment
+By xpath_WayToChangeAssignment=By.xpath("//oj-select-single[contains(@id,'CorrectionActionId')]//span/span");
+//why the way to change assignment
+By xpath_ReasonForChangeAssignment=By.xpath("//oj-select-single[contains(@id,'CorrectionActionReasonId')]//span/span");
+//business unit:
+// By xpath_BusinessUnit=By.xpath("//oj-select-single[contains(@id,'BusinessUnitId')]//span/span");
+//continue button:
+By xpath_ContinueButtonSecondPage=By.xpath("//*[text()='Continue']/../../..");
+
+//Verify page:
+By xpath_PensionFormulaDefaulted=By.xpath("(//*[text()='Pension Formula Defaulted'])[1]");
+//Job
+By xpath_Job=By.xpath("//oj-select-single[contains(@id,'UserPersonTypeId')]//span/span");
+//Grade
+By xpath_Grade=By.xpath("//oj-select-single[contains(@id,'GradeId')]//span/span");
+//Department
+By xpath_Department=By.xpath("//oj-select-single[contains(@id,'DepartmentId')]//span/span");
+//Reporting establishment:
+By xpath_ReportingEstablishmentsecondpage=By.xpath("//oj-select-single[contains(@id,'ReportingEstablishmentId')]//span/span");
+//Loacation:
+By xpath_Locationsecondpage=By.xpath("//oj-select-single[contains(@id,'.LocationId')]//span/span");
+//Hourly Paid or Salaried:
+By xpath_HourlyPaidOrSalaried=By.xpath("//oj-select-single[contains(@id,'HourlySalariedCode')]//span/span");
+//Working Hours Frequency:
+// By xpath_WorkingHoursFrequency=By.xpath("//oj-select-single[contains(@id,'WorkingHoursFrequency')]//span/span");
+//Union
+// By xpath_Union=By.xpath("//oj-select-single[contains(@id,'UnionId')]//span/span");
+//Bargaining Unit:
+// By xpath_BargainingUnit=By.xpath("//oj-select-single[contains(@id,'BargainingUnitCode')]//span/span");
+
+//second page continue button:
+By xpath_SecondPageContinueButton=By.xpath("//*[text()='Continue']/../../..");
+//Verify 3rd page:
+By xpath_SalaryPage=By.xpath("(//*[text()='Salary'])[1]");
+//continue button:
+By xpath_ThirdPageContinueButton=By.xpath("//*[text()='Continue']/../../..");
+//seniority date:
+By xpath_SeniorityDate=By.xpath("(//*[text()='Consolidated Edison Inc'])[1]");
+//submit button:
+By xpath_SubmitButtonIn=By.xpath("//*[text()='Submit']/../..");
+
+
+public void verifyEmploymentAndNavigateToChangeAssignment() throws Exception{
+    Wrapper.waitForpresenceOfElementLocated(xpath_MyClientGroups);
+    Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MyClientGroups));
+    Thread.sleep(4000);
+    Wrapper.scrollToElement(Wrapper.findWebElement(xpath_ShowMoreButton), "Show More Button");
+    Wrapper.waitForElementToBeClickable(Wrapper.findWebElement(xpath_ShowMoreButton));
+    Wrapper.clickWebElement(Wrapper.findWebElement(xpath_ShowMoreButton));
+    Thread.sleep(4000);
+    Wrapper.scrollToElement(Wrapper.findWebElement(xpath_Employment), "Employment");
+    Wrapper.waitForElementToBeVisible(Wrapper.findWebElement(xpath_Employment));
+    Wrapper.findWebElement(xpath_Employment).isDisplayed();
+    Wrapper.scrollToElement(Wrapper.findWebElement(xpath_ChangeAssignment), "Change Assignment");
+    Wrapper.waitForElementToBeClickable(Wrapper.findWebElement(xpath_ChangeAssignment));
+    Wrapper.clickWebElement(Wrapper.findWebElement(xpath_ChangeAssignment));
+}
+
+public void clickEmployee(String EmployeeName) throws Exception{
+    Wrapper.clickWebElement(Wrapper.findWebElement(xpath_SearchByNameHolder));
+                Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_SearchByNameHolder), EmployeeName, false);
+                if(Wrapper.findWebElement(HRAXpath(EmployeeName)).isDisplayed()){
+                    Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                            .elementToBeClickable(HRAXpath(EmployeeName))).click();
+     
+Thread.sleep(5000);
+}
+}
+
+// public By SelectWayToChangeAssignment() throws Exception{
+//         String Gender=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"way to change");
+//         String xpath="//div[contains(@id,'gender')]//span[contains(text(),'test')]";
+//         xpath=xpath.replace("test", Gender);
+//         return By.xpath(xpath);
+//     }
+public void selectSalaryToggle() throws Exception{
+    Wrapper.scrollToElement(Wrapper.findWebElement(xpath_SalaryToggle), "Salary Toggle");
+    Wrapper.waitForElementToBeClickable(Wrapper.findWebElement(xpath_SalaryToggle));
+    Wrapper.clickWebElement(Wrapper.findWebElement(xpath_SalaryToggle));
+Thread.sleep(5000);
+    Wrapper.scrollToElement(Wrapper.findWebElement(xpath_ContinueFirstPage), "Continue Button on first page");
+    Wrapper.waitForElementToBeClickable(Wrapper.findWebElement(xpath_ContinueFirstPage));
+    Wrapper.clickWebElement(Wrapper.findWebElement(xpath_ContinueFirstPage));
+    Thread.sleep(5000);
+  }
+
+public void firstPage() throws Exception{
+    Wrapper.waitForpresenceOfElementLocated(xpath_DateSelector);
+//select date
+Wrapper.selectDate(
+            Wrapper.findWebElement(xpath_DateSelector),
+            "9/May/2027",
+            xpath_ResignationRetirementDateValue,
+            xpath_DatePickerMonth,
+            xpath_DatePickerYear,
+            xpath_DatePickerNext
+        );
+
+
+        // Wait by locator (not cached WebElement), then click a fresh element
+        Wrapper.waitForpresenceOfElementLocated(xpath_WayToChangeAssignment);
+        Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(xpath_WayToChangeAssignment)).click();
+ 
+        // Select "Assignment Change"
+        By actionOption = xpath_ReasonSelection("Assignment Change");
+        Wrapper.waitForpresenceOfElementLocated(actionOption);
+        Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(actionOption)).click();
+                Thread.sleep(5000);
+ 
+        // Open Reason dropdown
+        Wrapper.waitForpresenceOfElementLocated(xpath_ReasonForChangeAssignment);
+        Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(xpath_ReasonForChangeAssignment)).click();
+ 
+        // Select "Return to Union"
+        By reasonOption = xpath_ReasonSelection("Return to Union");
+        Wrapper.waitForpresenceOfElementLocated(reasonOption);
+        Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(reasonOption)).click();
+Thread.sleep(5000);
+                // Click Continue
+           
+Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(xpath_MSSContinueButton)).click();
+
+Thread.sleep(5000);
+}
+
+
+public void verifyAndEnterSecondPageDetails() throws InterruptedException{
+    Wrapper.waitForpresenceOfElementLocated(xpath_Department);
+//    Wrapper.findWebElement(xpath_PensionFormulaDefaulted).isDisplayed();
+       
+//     // select job
+//         Wrapper.waitForpresenceOfElementLocated(xpath_Job);
+//         Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+//                 .elementToBeClickable(xpath_Job)).click();
+ 
+//         // Select "General Utility Worker L1-2"
+//         By actionOption = xpath_ReasonSelection("General Utility Worker L1-2");
+//         Wrapper.waitForpresenceOfElementLocated(actionOption);
+//         Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+//                 .elementToBeClickable(actionOption)).click();
+ 
+//         // Select grade
+//         Wrapper.waitForpresenceOfElementLocated(xpath_Grade);
+//         Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+//                 .elementToBeClickable(xpath_Grade)).click();
+ 
+//         // Select "General Utility Worker L1-2"
+//         By reasonOption = xpath_ReasonSelection("General Utility Worker L1-2");
+//         Wrapper.waitForpresenceOfElementLocated(reasonOption);
+//         Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+//                 .elementToBeClickable(reasonOption)).click();
+
+// // select department
+//         Wrapper.waitForpresenceOfElementLocated(xpath_Department);
+//         Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+//                 .elementToBeClickable(xpath_Department)).click();
+ 
+//         // Select "SUBST OPS BX Manh North Ops"
+//         By actionOption1 = xpath_ReasonSelection("SUBST OPS BX Manh North Ops");
+//         Wrapper.waitForpresenceOfElementLocated(actionOption1);
+//         Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+//                 .elementToBeClickable(actionOption1)).click();
+ 
+//         // Select reporting establishment
+//         Wrapper.waitForpresenceOfElementLocated(xpath_ReportingEstablishmentsecondpage);
+//         Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+//                 .elementToBeClickable(xpath_ReportingEstablishmentsecondpage)).click();
+ 
+//         // Select "The Learning Center"
+//         By reasonOption1 = xpath_ReasonSelection("The Learning Center");
+//         Wrapper.waitForpresenceOfElementLocated(reasonOption1);
+//         Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+//                 .elementToBeClickable(reasonOption1)).click();
+
+// // select location
+//         Wrapper.waitForpresenceOfElementLocated(xpath_Locationsecondpage);
+//         Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+//                 .elementToBeClickable(xpath_Locationsecondpage)).click();
+ 
+//         // Select "Mott Haven Substation"
+//         By actionOption2 = xpath_ReasonSelection("Mott Haven Substation");
+//         Wrapper.waitForpresenceOfElementLocated(actionOption2);
+//         Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+//                 .elementToBeClickable(actionOption2)).click();
+ 
+//         // Select Hourly Paid or Salaried
+//         Wrapper.waitForpresenceOfElementLocated(xpath_HourlyPaidOrSalaried);
+//         Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+//                 .elementToBeClickable(xpath_HourlyPaidOrSalaried)).click();
+ 
+//         // Select "Salaried"
+//         By reasonOption2 = xpath_ReasonSelection("Salaried");
+//         Wrapper.waitForpresenceOfElementLocated(reasonOption2);
+//         Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+//                 .elementToBeClickable(reasonOption2)).click();
+
+
+//                 // select working hours frequency
+//         Wrapper.waitForpresenceOfElementLocated(xpath_WorkingHoursFrequency);
+//         Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+//                 .elementToBeClickable(xpath_WorkingHoursFrequency)).click();
+ 
+//         // Select "Monthly"
+//         By actionOption3 = xpath_ReasonSelection("Monthly");
+//         Wrapper.waitForpresenceOfElementLocated(actionOption3);
+//         Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+//                 .elementToBeClickable(actionOption3)).click();
+ 
+//         // Select Union
+//         Wrapper.waitForpresenceOfElementLocated(xpath_Union);
+//         Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+//                 .elementToBeClickable(xpath_Union)).click();
+ 
+//         // Select "Salaried"
+//         By reasonOption3 = xpath_ReasonSelection("1_2");
+//         Wrapper.waitForpresenceOfElementLocated(reasonOption3);
+//         Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+//                 .elementToBeClickable(reasonOption3)).click();
+
+//                   // select bargaining unit
+//         Wrapper.waitForpresenceOfElementLocated(xpath_BargainingUnit);
+//         Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+//                 .elementToBeClickable(xpath_BargainingUnit)).click();
+ 
+//         // Select "Monthly"
+//         By actionOption4 = xpath_ReasonSelection("1_2");
+//         Wrapper.waitForpresenceOfElementLocated(actionOption4);
+//         Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+//                 .elementToBeClickable(actionOption4)).click();
+ 
+        // Click Continue
+        Thread.sleep(5000);
+Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(xpath_MSSContinueButton)).click();
+Thread.sleep(4000);
+}
+
+
+By xpath_HRASalaryAmount=By.xpath("//*[text()='Salary Amount']");
+public void verifyThirdPageDetailsAndSubmit() throws InterruptedException{
+    Thread.sleep(5000);
+    Wrapper.scrollToElement(Wrapper.findWebElement(xpath_SalaryPage), "Salary Page");
+    Wrapper.waitForpresenceOfElementLocated(xpath_HRASalaryAmount);
+   
+
+    // Click Continue
+    Thread.sleep(5000);
+Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(xpath_MSSContinueButton)).click();
+
+    // Verify Seniority Date
+    Wrapper.waitForpresenceOfElementLocated(xpath_SeniorityDate);
+    Wrapper.findWebElement(xpath_SeniorityDate).isDisplayed();
+Thread.sleep(5000);
+    // Click Submit
+      Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(xpath_MSSSubmitButton)).click();
+
+Thread.sleep(4000);
+
+}
+
+
+
+
+// MSS - Manager or Supervisor- Change
+//my team:
+By xpath_MyTeamMSS = By.xpath("//*[text()='My Team']");
+//Show more:
+By xpath_ShowMoreMSS = By.xpath("(//*[text()='Show More'])[2]");
+//Change manager:
+By xpath_ChangeManager = By.xpath("(//*[text()='Change Manager'])[2]");
+//janie roy:
+By xpath_name=By.xpath("//*[text()='Janie Roy']//..");
+//toggle button:
+By xpath_ToggleButton = By.xpath("//*[text()='Direct reports']/following-sibling::oj-switch");
+//continue button:
+By xpath_ContinueButtonMSS = By.xpath("//*[text()='Continue']/ancestor::button");
+//when does the assignmentchange start:
+// By xpath_AssignmentChangeStartDateMSS= By.xpath("//*[@title='Select Date.']");
+//whats the way to change assignment
+By xpath_WayToChangeAssignmentMSS = By.xpath("//oj-select-single[contains(@id,'ActionId')]//span/span");
+//why the way to change assignment
+By xpath_WayToChangeAssignmentReasonMSS = By.xpath("//oj-select-single[contains(@id,'.ActionReasonId')]//span/span");
+//Why are you making changes to direct reports
+By xpath_WhyAreYouMakingChangesMSS = By.xpath("//oj-select-single[contains(@id,'.ManageDirectsActionReasonId')]//span/span");
+//continue button:
+By xpath_ContinueButtonMSS2 = By.xpath("//button[@aria-label='Continue']");
+//managers verify:
+By xpath_ManagersVerifyMSS = By.xpath("(//*[text()='Managers'])[1]");
+//pencil icon:
+By xpath_PencilIconMSS = By.xpath("//oj-button[@title='Edit Managers']/button");
+//manager name change:
+By xpath_ManagerNameChangeMSS = By.xpath("//oj-input-text[contains(@label-hint,'Managers')]//input");
+//Save button:
+By xpath_SaveButtonMSS = By.xpath("(//*[text()='Save']//..//..)[1]");
+//submit button:
+By xpath_SubmitButtonMSS = By.xpath("(//*[text()='Submit']//..//..)[1]");
+
+//name in search box:
+By xpath_SelectingName=By.xpath("//ul[@id='searchSuggestionsListbox_search1']");
+
+public void navigateToChangeManager() throws InterruptedException{
+    Wrapper.scrollToElement(Wrapper.findWebElement(xpath_MyTeamMSS), "My Team");
+    Wrapper.waitForElementToBeClickable(Wrapper.findWebElement(xpath_MyTeamMSS));
+    Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MyTeamMSS));
+    
+    Wrapper.scrollToElement(Wrapper.findWebElement(xpath_ShowMoreMSS), "Show More");
+    Wrapper.waitForElementToBeClickable(Wrapper.findWebElement(xpath_ShowMoreMSS));
+    Wrapper.clickWebElement(Wrapper.findWebElement(xpath_ShowMoreMSS));
+   
+    Wrapper.scrollToElement(Wrapper.findWebElement(xpath_ChangeManager), "Change Manager");
+    Wrapper.waitForElementToBeClickable(Wrapper.findWebElement(xpath_ChangeManager));
+    Wrapper.clickWebElement(Wrapper.findWebElement(xpath_ChangeManager));
+}
+
+
+public void clickEmployeeMSS(String EmployeeName) throws Exception{
+    Wrapper.clickWebElement(Wrapper.findWebElement(xpath_SearchByNameHolder));
+                Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_SearchByNameHolder), EmployeeName, false);
+                if(Wrapper.findWebElement(HRAXpath(EmployeeName)).isDisplayed()){
+                    Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                            .elementToBeClickable(HRAXpath(EmployeeName))).click();
+     
+
+}
+}
+
+public void toggleDirectReportButton() throws InterruptedException{
+    Wrapper.scrollToElement(Wrapper.findWebElement(xpath_ToggleButton), "Toggle Button for Direct Report");
+    Wrapper.waitForElementToBeClickable(Wrapper.findWebElement(xpath_ToggleButton));
+    Wrapper.clickWebElement(Wrapper.findWebElement(xpath_ToggleButton));
+ 
+    
+Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(xpath_MSSContinueButton)).click();
+}
+
+public void verifyFirstPageDetailsAndContinue() throws Exception{
+    
+
+Wrapper.selectDate(
+            Wrapper.findWebElement(xpath_DateSelector),
+            "6/April/2026",
+            xpath_ResignationRetirementDateValue,
+            xpath_DatePickerMonth,
+            xpath_DatePickerYear,
+            xpath_DatePickerPrevious
+        );
+
+
+        // Wait by locator (not cached WebElement), then click a fresh element
+        Wrapper.waitForpresenceOfElementLocated(xpath_WayToChangeAssignmentMSS);
+        Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(xpath_WayToChangeAssignmentMSS)).click();
+ 
+        // Select "Manager Change"
+        By actionOption = xpath_ReasonSelection("Manager Change");
+        Wrapper.waitForpresenceOfElementLocated(actionOption);
+        Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(actionOption)).click();
+ 
+        // Open Reason dropdown
+        Wrapper.waitForpresenceOfElementLocated(xpath_WayToChangeAssignmentReasonMSS);
+        Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(xpath_WayToChangeAssignmentReasonMSS)).click();
+ 
+        // Select "Change of Supervisor/Manager"
+        By reasonOption = xpath_ReasonSelection("Change of Supervisor/Manager");
+        Wrapper.waitForpresenceOfElementLocated(reasonOption);
+        Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(reasonOption)).click();
+
+                // Open Reason dropdown
+                if(Wrapper.findWebElement(xpath_WhyAreYouMakingChangesMSS).isDisplayed() && Wrapper.findWebElement(xpath_WhyAreYouMakingChangesMSS).isEnabled()){
+                    System.out.println("Why are you making changes to direct reports dropdown is displayed and enabled");
+                    Wrapper.waitForpresenceOfElementLocated(xpath_WhyAreYouMakingChangesMSS);
+        Wrapper.waitForpresenceOfElementLocated(xpath_WhyAreYouMakingChangesMSS);
+        Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(xpath_WhyAreYouMakingChangesMSS)).click();
+ 
+        // Select "Change of Supervisor/Manager"
+        By reasonOption1 = xpath_ReasonSelection("Change of Supervisor/Manager");
+        Wrapper.waitForpresenceOfElementLocated(reasonOption1);
+        Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(reasonOption1)).click();
+                
+
+Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(xpath_MSSContinueButton)).click();
+                }
+                else{
+                    System.out.println("Why are you making changes to direct reports dropdown is either not displayed or not enabled");
+                    Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(xpath_MSSContinueButton)).click();
+                }
+}
+
+//manager input box:
+By xpath_ManagerInputBox=By.xpath("//oj-input-text[contains(@label-hint,'Managers')]//input");
+
+public void changeManagerAndSubmit() throws Exception{
+//     Wrapper.waitForpresenceOfElementLocated(xpath_PencilIconMSS);
+//     Wrapper.waitForElementToBeClickable(Wrapper.findWebElement(xpath_PencilIconMSS));
+//   Wrapper.clickUsingJS(Wrapper.findWebElement(xpath_PencilIconMSS));
+// Thread.sleep(10000);
+// Wrapper.clickUsingJS(Wrapper.findWebElement(xpath_PencilIconMSS));
+// Thread.sleep(3000);
+// // Wrapper.waitForpresenceOfElementLocated(xpath_ManagerInputBox);
+// Wrapper.clickUsingJS(Wrapper.findWebElement(xpath_ManagerInputBox));
+//     Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_ManagerInputBox), "Bethanie Tuck", true);
+
+
+    
+    // Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+    //             .elementToBeClickable(xpath_SaveButtonMSS)).click();
+    //             Thread.sleep(5000);
+System.out.println("Why are you making changes to direct reports dropdown is either not displayed or not enabled");
+                    Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(xpath_MSSContinueButton)).click();
+                    
+
+//direct reports verification and continue
+                Thread.sleep(5000);
+                System.out.println("Why are you making changes to direct reports dropdown is either not displayed or not enabled");
+                    Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(xpath_MSSContinueButton)).click();
+                    
+
+ // Verify Seniority Date
+    Wrapper.waitForpresenceOfElementLocated(xpath_SeniorityDate);
+   
+
+    // Click Submit
+      Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(xpath_MSSSubmitButton)).click();
+
+
+}
+
+    //HRA Adhoc Salary Initiate
+    By xpath_MYteamadhocsalaryinitiate = By.xpath("//a[text()='My Team']");
+    
+    By xpath_ShowmoreAdhocinitaite = By.xpath("//div[contains(@group,'groupNode_manager')]//a[text()='Show More']");
+    By xpath_AdhocInitiateChangSalary = By.xpath("//div[@class='flat-quickactions-container']//child::a[text()='Change Salary']");
+    By xpath_AdhocInitiatedatepicker = By.xpath("//oj-input-date[contains(@id,'effectiveDate')]//span[contains(@title,'Select Date.')]");
+    By xpath_actionname = By.xpath("//oj-select-single[contains(@id,'actionSingleSelect')]//span/span");
+    By xpath_changingTheSalarydropdown = By.xpath("//oj-select-single[contains(@id,'reasonSingleSelect')]//span/span");
+    // Helper method to generate dynamic xpath with text input
+    public By xpath_ReasonSelectionactionname(String reasonText) {
+        String xpath = "//span[contains(text(),'xxx')]";
+        xpath = xpath.replace("xxx", reasonText);
+        return By.xpath(xpath);
+        ////div[contains(@id,'contact-relationship')]//ul/li//span[contains(text(),'Con Ed Spouse')]
+    }
+    public void navigateToInitiateMyTeamPage() throws Exception{
+        Thread.sleep(5000);
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MYteamadhocsalaryinitiate));
+        Thread.sleep(5000);
+        attachStepEvidence("the manager clicked on MyTeam menu.");
+    }
+
+    public void navigateTochangeSalaryPage() throws Exception{
+        parentWindow = driver.getWindowHandle();
+        Wrapper.scrollToElement(Wrapper.findWebElement(xpath_ShowmoreAdhocinitaite),"Showmoreinitiate");
+        Wrapper.waitForpresenceOfElementLocated(xpath_ShowmoreAdhocinitaite);
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_ShowmoreAdhocinitaite));
+        Thread.sleep(5000);
+        Wrapper.scrollToElement(Wrapper.findWebElement(xpath_AdhocInitiateChangSalary),"ChangeSalary");
+        Thread.sleep(2000);
+        Wrapper.waitForpresenceOfElementLocated(xpath_AdhocInitiateChangSalary);
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_AdhocInitiateChangSalary));
+        Thread.sleep(5000);
+        // attachStepEvidence("the manager clicked on Worklist option under Tools menu.");
+        attachStepEvidence("Manager is on change salary page for initiateing salary change");
+    }
+
+    public void submitAdHocSalaryChangeRequest() throws Exception{
+        String EmployeeName=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"First Name");
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_EmployeeSearchBox));
+            Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_EmployeeSearchBox), EmployeeName, false);
+            if(Wrapper.findWebElement(HRAXpath(EmployeeName)).isDisplayed()){
+               
+                Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                        .elementToBeClickable(HRAXpath(EmployeeName))).click();
+            }
+        Thread.sleep(5000);
+ 
+        // attachStepEvidence("the manager clicked on Worklist option under Tools menu.");
+        attachStepEvidence("Manager is on change salary page for initiateing salary change");
+   
+    }
+
+    public void fillAdhocSalaryChangeDetailsforInitiate() throws Exception{
+        // Wrapper.clickWebElement(Wrapper.findWebElement(xpath_AdhocInitiatedatepicker));
+        Thread.sleep(8000);
+        String SalaryChange = "300000";
+        Wrapper.selectDate(Wrapper.findWebElement(xpath_AdhocInitiatedatepicker), "15/June/2026", xpath_ResignationRetirementDateValue, xpath_DatePickerMonth, xpath_DatePickerYear, xpath_DatePickerNext);
+        Thread.sleep(5000);
+        //firstdropdown
+        Wrapper.waitForpresenceOfElementLocated(xpath_actionname);
+        Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(xpath_actionname)).click();
+ 
+        By actionOption = xpath_ReasonSelectionactionname("Change Salary");
+        Wrapper.waitForpresenceOfElementLocated(actionOption);
+        Thread.sleep(3000);
+        Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(actionOption)).click();
+ 
+        //second dropdown
+        Thread.sleep(3000);
+        Wrapper.scrollToElement(Wrapper.findWebElement(xpath_changingTheSalarydropdown), "Changing the Salary dropdown");
+        Thread.sleep(3000);
+        Wrapper.waitForpresenceOfElementLocated(xpath_changingTheSalarydropdown);
+        Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(xpath_changingTheSalarydropdown)).click();
+        Thread.sleep(3000);
+ 
+       
+        By actiondropdownOption = xpath_ReasonSelectionactionname("Cost of Living Adjustment");
+        Wrapper.waitForpresenceOfElementLocated(actiondropdownOption);
+        Thread.sleep(3000);
+        Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                .elementToBeClickable(actiondropdownOption)).click();
+                Thread.sleep(2000);
+                attachStepEvidence("Mnager selets dropdowns for date and reason");
+       
+        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MSSContinueButton));
+       
+        Thread.sleep(5000);
+        Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_SalaryChange), SalaryChange, true);
+ 
+        attachStepEvidence("Manger changes salary");
+         Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MSSContinueButton));
+ 
+         Thread.sleep(5000);
+          Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MSSContinueButton));
+          Thread.sleep(3000);
+         Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_CommentsInputBox), "Testing purpose", false);
+            attachStepEvidence("the manager filled the details in Comments and attachments page and submitted the termination request.");
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_SaveComment));
+            Thread.sleep(3000);
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_ClickCross));
+            Thread.sleep(3000);
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MSSSubmitButton));
+            Thread.sleep(5000);
+    }
+
+    //Retirement or Resignation Withdrawal by Employee
+    By xpath_ResignationReason = By.xpath("//oj-select-single[contains(@id,'actionOccurrences.ActionReasonId')]//span/span");
+    By xpath_WithdrawSubmit = By.xpath("(//button[contains(@class,'oj-button-button')]//child::span[text()='Submit'])[1]");
+    By xpath_Withdraw=By.xpath("(//button[text()='Withdraw Resignation'])[1]");
+    public void withdrawRetirementRequest(){
+        try{
+            Thread.sleep(5000);
+            
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_Withdraw));
+            Thread.sleep(5000);
+            Wrapper.waitForpresenceOfElementLocated(xpath_ResignationReason);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                    .elementToBeClickable(xpath_ResignationReason)).click();
+    
+            // Select "Location Change"
+            attachStepEvidence("Employee clicks on Withdraw button and selects reason for withdrawing the resignation/retirement request");
+            By actionOption = xpath_ReasonSelection("Employee Requested");
+            Wrapper.waitForpresenceOfElementLocated(actionOption);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                    .elementToBeClickable(actionOption)).click();
+            Thread.sleep(3000);
+            Wrapper.clickWebElement(Wrapper.findWebElement(xpath_WithdrawSubmit));
+            Thread.sleep(5000);
+        }catch(InterruptedException e){
+            e.printStackTrace();
+            throw new RuntimeException("Error withdrawing retirement request: " + e.getMessage(), e);
+        }
+    }
+
+
+}
