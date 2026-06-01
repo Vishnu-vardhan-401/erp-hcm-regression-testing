@@ -339,16 +339,16 @@ public class HCMTest extends BaseClass {
     
     // Scenario: ESS - Compensation - View My Compensation
     @Given("is on the View My Compensation page")
-    public void is_on_the_View_My_Compensation_page() {
+    public void is_on_the_View_My_Compensation_page() throws Exception {
         // Write code here that turns the phrase above into concrete actions
-        AllureReportUtil.info("Navigating to View My Compensation page");
+        // AllureReportUtil.info("Navigating to View My Compensation page");
         hdp.navigateToCompensation();
         AllureReportUtil.info("Navigated to View My Compensation page");
-        attachStepEvidence("is on the View My Compensation page");
+        // attachStepEvidence("is on the View My Compensation page");
     }
 
     @When("the employee views compensation details")
-    public void the_employee_views_compensation_details() {
+    public void the_employee_views_compensation_details() throws Exception {
         // Write code here that turns the phrase above into concrete actions
         AllureReportUtil.info("Validating compensation details");
         hdp.validateCompensationDetails();
@@ -363,7 +363,7 @@ public class HCMTest extends BaseClass {
     @Given("is on the Retirement or Resignation page")
     public void is_on_the_Retirement_or_Resignation_page() {
         // Write code here that turns the phrase above into concrete actions
-        AllureReportUtil.info("Navigating to Retirement or Resignation page");
+        // AllureReportUtil.info("Navigating to Retirement or Resignation page");
         hdp.navigateToResignationRetirement();
         AllureReportUtil.info("Navigated to Retirement or Resignation page");
         // attachStepEvidence("is on the Retirement or Resignation page");
@@ -463,11 +463,11 @@ public class HCMTest extends BaseClass {
     @Given("is on the Location Change page")
     public void is_on_the_Location_Change_page() throws Exception {
         // Write code here that turns the phrase above into concrete actions
-        AllureReportUtil.info("Navigating to Location Change page");
+        // AllureReportUtil.info("Navigating to Location Change page");
         hdp.navigateToLocationChangePage();
         Thread.sleep(5000); // Consider replacing with explicit wait for better reliability
         AllureReportUtil.info("Navigated to Location Change page");
-        attachStepEvidence("is on the Location Change page");
+        // attachStepEvidence("is on the Location Change page");
     }
 
     @Given("is on the HRA Location Change page")
@@ -489,14 +489,14 @@ public class HCMTest extends BaseClass {
         // hdp.submitLocationChangeRequest("22/May/2026");
         Thread.sleep(5000); // Consider replacing with explicit wait for better reliability
         AllureReportUtil.info("Submitted location change request for direct report with valid details");
-        attachStepEvidence("the manager submits a location change request for a direct report with valid details");
+        // attachStepEvidence("the manager submits a location change request for a direct report with valid details");
 
     }
 
     @When("the manager submits a HRA location change request for a direct report with valid details")
     public void the_manager_submits_a_HRA_location_change_request_for_a_direct_report_with_valid_details() throws Exception {
         // Write code here that turns the phrase above into concrete actions
-        AllureReportUtil.info("Submitting location change request for direct report with valid details");
+        // AllureReportUtil.info("Submitting location change request for direct report with valid details");
         hdp.submitHRALocationChangeRequest("22/May/2026");
         // AllureReportUtil.info("Submitting location change request for direct report with valid details");
         // hdp.submitLocationChangeRequest("22/May/2026");
@@ -580,13 +580,12 @@ public class HCMTest extends BaseClass {
     
     //1279851-->HRA - Working Hours - Change
     @Given("is on the Working Hours Change page")
-    public void is_on_the_Working_Hours_Change_page() {
+    public void is_on_the_Working_Hours_Change_page() throws Exception {
         // Write code here that turns the phrase above into concrete actions
         hdp.navigateToChangeWorkingHoursPage();
         AllureReportUtil.info("Navigated to Working Hours Change page");
-        hdp.searchEmployeeForWorkingHoursChange("Gregory Dunaway");
+        hdp.searchEmployeeForWorkingHoursChange();
         attachStepEvidence("the manager is on the Working Hours Change page");
-
     }
 
     @When("the manager submits a working hours change request for a direct report with valid details")

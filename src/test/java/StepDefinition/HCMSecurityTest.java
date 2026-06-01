@@ -190,28 +190,160 @@ public class HCMSecurityTest {
         // Write code here that turns the phrase above into concrete actions
         hcmSecurity.validateDashboardItems();
     }
+
+    //CE Compensation Staff 
+    @Given("the user is logged into Oracle HCM as a CE Compensation Staff and on Dashboard")
+    public void the_user_is_logged_into_Oracle_HCM_as_a_CE_Compensation_Staff_and_on_Dashboard() {
+        // Write code here that turns the phrase above into concrete actions
+        the_user_is_logged_into_Oracle_HCM_as_a_CE_Time_Entry_Clerk_and_on_Dashboard();
+    }
+
+    @When("the user reviews the Quick Action items and tiles displayed for the CE Compensation Staff role")
+    public void the_user_reviews_the_Quick_Action_items_and_tiles_displayed_for_the_CE_Compensation_Staff_role() {
+        // Write code here that turns the phrase above into concrete actions
+        hcmSecurity.captureCompensationStaffMyClientGroupsDashboardItems();
+        hcmSecurity.captureCompensationStaffHRConnectDashboardItems();
+        hcmSecurity.captureCompensationStaffToolsDashboardItems();
+    }
     
+    @Then("the user should verify that only the approved tiles and menu items are enabled for the CE Compensation Staff role")
+    public void the_user_should_verify_that_only_the_approved_tiles_and_menu_items_are_enabled_for_the_CE_Compensation_Staff_role() {
+        // Write code here that turns the phrase above into concrete actions
+        hcmSecurity.validateDashboardItems();
+    }
     
+    //CE HR Employment Data View Only Excl Exec Retiree LEB
+    @Given("the user is logged into Oracle HCM as a CE HR Employment Data View Only Excl Exec Retiree LEB and on Dashboard")
+    public void the_user_is_logged_into_Oracle_HCM_as_a_CE_HR_Employment_Data_View_Only_Excl_Exec_Retiree_LEB_and_on_Dashboard() {
+        // Write code here that turns the phrase above into concrete actions
+        the_user_is_logged_into_Oracle_HCM_as_a_CE_Time_Entry_Clerk_and_on_Dashboard();
+    }
 
+    @When("the user reviews the Quick Action items and tiles displayed for the CE HR Employment Data View Only Excl Exec Retiree LEB role")
+    public void the_user_reviews_the_Quick_Action_items_and_tiles_displayed_for_the_CE_HR_Employment_Data_View_Only_Excl_Exec_Retiree_LEB_role() {
+        // Write code here that turns the phrase above into concrete actions
+        hcmSecurity.captureHRMEmploymentDataViewOnlyExclExecRetireeLEBMyClientGroupsDashboardItems();
+        hcmSecurity.captureHRMEmploymentDataViewOnlyExclExecRetireeLEBHRConnectDashboardItems();
+        hcmSecurity.captureHRMEmploymentDataViewOnlyExclExecRetireeLEBToolsDashboardItems();
+    }
+
+    @Then("the user should verify that only the approved tiles and menu items are enabled for the CE HR Employment Data View Only Excl Exec Retiree LEB role")
+    public void the_user_should_verify_that_only_the_approved_tiles_and_menu_items_are_enabled_for_the_CE_HR_Employment_Data_View_Only_Excl_Exec_Retiree_LEB_role() {
+        // Write code here that turns the phrase above into concrete actions
+        hcmSecurity.validateDashboardItems();
+    }
+
+    //CE HR Employment Data View Only Full Population
+    @Given("the user is logged into Oracle HCM as a CE HR Employment Data View Only Full Population and on Dashboard")
+    public void the_user_is_logged_into_Oracle_HCM_as_a_CE_HR_Employment_Data_View_Only_Full_Population_and_on_Dashboard() {
+        // Write code here that turns the phrase above into concrete actions
+        the_user_is_logged_into_Oracle_HCM_as_a_CE_Time_Entry_Clerk_and_on_Dashboard();
+    }
     
+    @When("the user reviews the Quick Action items and tiles displayed for the CE HR Employment Data View Only Full Population role")
+    public void the_user_reviews_the_Quick_Action_items_and_tiles_displayed_for_the_CE_HR_Employment_Data_View_Only_Full_Population_role() {
+        // Write code here that turns the phrase above into concrete actions
+        hcmSecurity.captureHRMEmploymentDataViewOnlyFullPopulationMyClientGroupsDashboardItems();
+        hcmSecurity.captureHRMEmploymentDataViewOnlyFullPopulationHRConnectDashboardItems();
+        hcmSecurity.captureHRMEmploymentDataViewOnlyFullPopulationToolsDashboardItems();
+    }
 
+    @Then("the user should verify that only the approved tiles and menu items are enabled for the CE HR Employment Data View Only Full Population role")
+    public void the_user_should_verify_that_only_the_approved_tiles_and_menu_items_are_enabled_for_the_CE_HR_Employment_Data_View_Only_Full_Population_role() {
+        // Write code here that turns the phrase above into concrete actions
+        hcmSecurity.validateDashboardItems();
+    }
 
+    //CE HR Director Full Population
+    @Given("the user is logged into Oracle HCM as a CE HR Director Full Population and on Dashboard")
+    public void the_user_is_logged_into_Oracle_HCM_as_a_CE_HR_Director_Full_Population_and_on_Dashboard() {
+        // Write code here that turns the phrase above into concrete actions
+        the_user_is_logged_into_Oracle_HCM_as_a_CE_Time_Entry_Clerk_and_on_Dashboard();
+    }
+
+    @When("the user reviews the Quick Action items and tiles displayed for the CE HR Director Full Population role")
+    public void the_user_reviews_the_Quick_Action_items_and_tiles_displayed_for_the_CE_HR_Director_Full_Population_role() {
+        // Write code here that turns the phrase above into concrete actions
+        hcmSecurity.captureHRDirectorFullPopulationMyClientGroupsDashboardItems();
+        hcmSecurity.captureHRDirectorFullPopulationHRConnectDashboardItems();
+        hcmSecurity.captureHRDirectorFullPopulationToolsDashboardItems();
+    }
+
+    @Then("the user should verify that only the approved tiles and menu items are enabled for the CE HR Director Full Population role")
+    public void the_user_should_verify_that_only_the_approved_tiles_and_menu_items_are_enabled_for_the_CE_HR_Director_Full_Population_role() {
+        // Write code here that turns the phrase above into concrete actions
+        hcmSecurity.validateDashboardItems();
+    }
+
+    //CE HR Data View Only LI Data Analytics Full Population
+    @Given("the user is logged into Oracle HCM as a CE HR Data View Only LI Data Analytics Full Population and on Dashboard")
+    public void the_user_is_logged_into_Oracle_HCM_as_a_CE_HR_Data_View_Only_LI_Data_Analytics_Full_Population_and_on_Dashboard() {
+        // Write code here that turns the phrase above into concrete actions
+        the_user_is_logged_into_Oracle_HCM_as_a_CE_Time_Entry_Clerk_and_on_Dashboard();
+    }
+
+    @When("the user reviews the Quick Action items and tiles displayed for the CE HR Data View Only LI Data Analytics Full Population role")
+    public void the_user_reviews_the_Quick_Action_items_and_tiles_displayed_for_the_CE_HR_Data_View_Only_LI_Data_Analytics_Full_Population_role() {
+        // Write code here that turns the phrase above into concrete actions
+        hcmSecurity.captureHRDataViewOnlyLIDataAnalyticsFullPopulationMyClientGroupsDashboardItems();
+        hcmSecurity.captureHRDataViewOnlyLIDataAnalyticsFullPopulationHRConnectDashboardItems();
+        hcmSecurity.captureHRDataViewOnlyLIDataAnalyticsFullPopulationToolsDashboardItems();
+    }
+
+    @Then("the user should verify that only the approved tiles and menu items are enabled for the CE HR Data View Only LI Data Analytics Full Population role")
+    public void the_user_should_verify_that_only_the_approved_tiles_and_menu_items_are_enabled_for_the_CE_HR_Data_View_Only_LI_Data_Analytics_Full_Population_role() {
+        // Write code here that turns the phrase above into concrete actions
+        hcmSecurity.validateDashboardItems();
+    }
     
+    //CE HR QA Compliance Full Population
+    @Given("the user is logged into Oracle HCM as a CE HR QA Compliance Full Population and on Dashboard")
+    public void the_user_is_logged_into_Oracle_HCM_as_a_CE_HR_QA_Compliance_Full_Population_and_on_Dashboard() {
+        // Write code here that turns the phrase above into concrete actions
+        the_user_is_logged_into_Oracle_HCM_as_a_CE_Time_Entry_Clerk_and_on_Dashboard();
+    }
+
+    @When("the user reviews the Quick Action items and tiles displayed for the CE HR QA Compliance Full Population role")
+    public void the_user_reviews_the_Quick_Action_items_and_tiles_displayed_for_the_CE_HR_QA_Compliance_Full_Population_role() {
+        // Write code here that turns the phrase above into concrete actions
+        hcmSecurity.captureHRQAComplianceFullPopulationMyClientGroupsDashboardItems();
+        hcmSecurity.captureHRQAComplianceFullPopulationHRConnectDashboardItems();
+        hcmSecurity.captureHRQAComplianceFullPopulationToolsDashboardItems();
+    }
+
+    @Then("the user should verify that only the approved tiles and menu items are enabled for the CE HR QA Compliance Full Population role")
+    public void the_user_should_verify_that_only_the_approved_tiles_and_menu_items_are_enabled_for_the_CE_HR_QA_Compliance_Full_Population_role() {
+        // Write code here that turns the phrase above into concrete actions
+        hcmSecurity.validateDashboardItems();
+    }
+
+    //HR Production Support
+    @Given("the user is logged into Oracle HCM as a HR Production Support and on Dashboard")
+    public void the_user_is_logged_into_Oracle_HCM_as_a_HR_Production_Support_and_on_Dashboard() {
+        // Write code here that turns the phrase above into concrete actions
+        the_user_is_logged_into_Oracle_HCM_as_a_CE_Time_Entry_Clerk_and_on_Dashboard();
+    }
+
+    @When("the user reviews the Quick Action items and tiles displayed for the HR Production Support role")
+    public void the_user_reviews_the_Quick_Action_items_and_tiles_displayed_for_the_HR_Production_Support_role()throws Exception {
+        // Write code here that turns the phrase above into concrete actions
+        hcmSecurity.captureHRProductionSupportMyClientGroupsDashboardItems();
+        hcmSecurity.captureHRProductionSupportBenefitsAdministrationDashboardItems();
+        hcmSecurity.captureHRProductionSupportPartnerManagementDashboardItems();
+        hcmSecurity.captureHRProductionSupportKnowledgeDashboardItems();
+        hcmSecurity.captureHRProductionSupportHRConnectDashboardItems();
+        hcmSecurity.captureHRProductionSupportMyEnterpriseDashboardItems();
+        hcmSecurity.captureHRProductionSupportToolsDashboardItems();
+        hcmSecurity.captureHRProductionSupportConfigurationDashboardItems();
+    }
+
+    @Then("the user should verify that only the approved tiles and menu items are enabled for the HR Production Support role")
+    public void the_user_should_verify_that_only_the_approved_tiles_and_menu_items_are_enabled_for_the_HR_Production_Support_role() {
+        // Write code here that turns the phrase above into concrete actions
+        hcmSecurity.validateDashboardItems();
+    }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-    
 }
+
+    

@@ -284,12 +284,12 @@ public class HCMCoreHR {
 	**/
     public void enterCredentials() throws Exception{
         try {
-            Thread.sleep(5000);
+            // Thread.sleep(5000);
             userName = ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Username");
             passWord = ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Password");
             Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_UserName), userName, false);
             Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_Password), passWord, false);   
-            Thread.sleep(5000);
+            Thread.sleep(2000);
         }catch(Exception e) {
             e.printStackTrace();
             throw new Exception("Error entering credentials: " + e.getMessage());
@@ -302,9 +302,9 @@ public class HCMCoreHR {
      */
     public void openDashboardPage() throws Exception{
         try {
-            Thread.sleep(5000);
+            Thread.sleep(2000);
             Wrapper.clickWebElement(Wrapper.findWebElement(xpath_SigninButton));
-            Thread.sleep(5000);
+            Thread.sleep(2000);
             // if(driver.findElement(xpath_UserName).isDisplayed()) {
             //     userName = ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Username");
             //     passWord = ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Password");
@@ -690,7 +690,7 @@ public class HCMCoreHR {
     public void enterCoworkerDetails() throws Exception{
         try{
             String CoworkerRelationshipStartDate = ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"CoworkerRelationshipSD");
-            String CoworkerName= ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"CoworkerName");
+            String CoworkerName= ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"CoworkerNumber");
             String CoworkerRelationship = ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"CoworkerRelationship");
             String CoworkerECNotes = ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"CoworkerECN");
             Thread.sleep(5000);
@@ -731,7 +731,7 @@ public class HCMCoreHR {
     public void enterHRACoworkerDetails() throws Exception {
         try{
             String CoworkerRelationshipStartDate = ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"CoworkerRelationshipSD");
-            String CoworkerName= ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"CoworkerName");
+            String CoworkerName= ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"CoworkerNumber");
             String CoworkerRelationship = ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"CoworkerRelationship");
             String CoworkerECNotes = ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"CoworkerECN");
             Thread.sleep(5000);
@@ -770,9 +770,12 @@ public class HCMCoreHR {
     }
 
     //ESS - Compensation - View My Compensation
-    public void navigateToCompensation(){
+    public void navigateToCompensation() throws Exception{
         Wrapper.clickWebElement(Wrapper.findWebElement(xpath_ShowMore));
         Wrapper.waitForpresenceOfElementLocated(xpath_Compensation);
+        Wrapper.scrollToElement(Wrapper.findWebElement(xpath_Compensation),"Compensation");
+        Thread.sleep(3000);
+        attachStepEvidence("Navigated to Compensation section");
         Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MyCompensation));
     }
 
@@ -846,6 +849,19 @@ public class HCMCoreHR {
         Wrapper.selectDate(Wrapper.findWebElement(xpath_ResignationRetirementDate), ResignationRetirementDate, xpath_ResignationRetirementDateValue, xpath_DatePickerMonth, xpath_DatePickerYear, xpath_DatePickerNext);
         
         if(Wrapper.findWebElement(xpath_ResignationRetirementReasonnValidation).isDisplayed()){
+            Wrapper.waitForpresenceOfElementLocated(xpath_ResignationRetirementAction);
+            // Thread.sleep(10000);
+            Wrapper.scrollToElement(Wrapper.findWebElement(xpath_ResignationRetirementAction),"Resignation/Retirement Action");
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                    .elementToBeClickable(xpath_ResignationRetirementAction)).click();
+            
+            // Thread.sleep(4000);
+            By ResignationRetirementActionOption = xpath_ReasonSelection("Retirement");
+            Wrapper.waitForpresenceOfElementLocated(ResignationRetirementActionOption);
+            Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
+                    .elementToBeClickable(ResignationRetirementActionOption)).click();
+
+
             Wrapper.waitForpresenceOfElementLocated(xpath_ResignationRetirementReason);
             // Thread.sleep(10000);
             Wrapper.scrollToElement(Wrapper.findWebElement(xpath_ResignationRetirementReason),"Resignation/Retirement Reason");
@@ -853,7 +869,7 @@ public class HCMCoreHR {
                     .elementToBeClickable(xpath_ResignationRetirementReason)).click();
             
             // Thread.sleep(4000);
-            By ResignationRetirementOption = xpath_ReasonSelection("Resign-Personal Reasons");
+            By ResignationRetirementOption = xpath_ReasonSelection("Retirement");
             Wrapper.waitForpresenceOfElementLocated(ResignationRetirementOption);
             Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
                     .elementToBeClickable(ResignationRetirementOption)).click();
@@ -874,7 +890,7 @@ public class HCMCoreHR {
 
     public void resignFromEmployment(String ResignationRetirementDate) throws Exception{
         // navigateToResignationRetirement();
-        enterResignationRetirementDetails(ResignationRetirementDate);
+        // enterResignationRetirementDetails(ResignationRetirementDate);
         // System.out.println("Initiating the resignation process.");
         // Wrapper.clickWebElement(Wrapper.findWebElement(xpath_ShowMore));
         // System.out.println("Clicked on Show More.");
@@ -883,21 +899,23 @@ public class HCMCoreHR {
         // System.out.println("Navigated to Resignation/Retirement page.");
         // Thread.sleep(5000);
         // enterResignationRetirementDetails(ResignationRetirementDate);
-        // Wrapper.selectDate(Wrapper.findWebElement(xpath_ResignationRetirementDate), ResignationRetirementDate, xpath_ResignationRetirementDateValue, xpath_DatePickerMonth, xpath_DatePickerYear, xpath_DatePickerNext);
         
+        // Wrapper.selectDate(Wrapper.findWebElement(xpath_ResignationRetirementDate), ResignationRetirementDate, xpath_ResignationRetirementDateValue, xpath_DatePickerMonth, xpath_DatePickerYear, xpath_DatePickerNext);
+        Wrapper.waitForpresenceOfElementLocated(xpath_ResignationRetirementDate);
+        Wrapper.selectDate(Wrapper.findWebElement(xpath_ResignationRetirementDate), ResignationRetirementDate, xpath_ResignationRetirementDateValue, xpath_DatePickerMonth, xpath_DatePickerYear, xpath_DatePickerNext);
         if(Wrapper.findWebElement(xpath_ResignationRetirementReasonnValidation).isDisplayed()){
 
-            Wrapper.waitForpresenceOfElementLocated(xpath_ResignationRetirementAction);
+            Wrapper.waitForpresenceOfElementLocated(xpath_ResignationRetirementReason);
             // Thread.sleep(10000);
-            Wrapper.scrollToElement(Wrapper.findWebElement(xpath_ResignationRetirementAction),"Resignation/Retirement Action");
+            Wrapper.scrollToElement(Wrapper.findWebElement(xpath_ResignationRetirementReason),"Resignation/Retirement Reason");
             Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
-                    .elementToBeClickable(xpath_ResignationRetirementAction)).click();
+                    .elementToBeClickable(xpath_ResignationRetirementReason)).click();
             
             // Thread.sleep(4000);
-            By ResignationRetirementActionOption = xpath_ReasonSelection("Resignation");
-            Wrapper.waitForpresenceOfElementLocated(ResignationRetirementActionOption);
+            By ResignationRetirementOption = xpath_ReasonSelection("Resign-Personal Reasons");
+            Wrapper.waitForpresenceOfElementLocated(ResignationRetirementOption);
             Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
-                    .elementToBeClickable(ResignationRetirementActionOption)).click();
+                    .elementToBeClickable(ResignationRetirementOption)).click();
  
             
         }
@@ -1061,12 +1079,17 @@ public class HCMCoreHR {
         return By.xpath(xpath);
         ////div[contains(@id,'contact-relationship')]//ul/li//span[contains(text(),'Con Ed Spouse')]
     }
-
+    By xpath_LocationChangeValidation=By.xpath("//h1[contains(text(),'Change Location')]");
     public void navigateToLocationChangePage(){
         Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MyTeam));
         Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MSSShowMore));
         // Wrapper.clickWebElement(Wrapper.findWebElement(xpath_Employment));
         Wrapper.clickWebElement(Wrapper.findWebElement(xpath_LocationChange));
+        Wrapper.waitForpresenceOfElementLocated(xpath_LocationChangeValidation);
+        if(Wrapper.findWebElement(xpath_LocationChangeAction).isDisplayed()){
+            attachStepEvidence("Navigated to Location Change page successfully.");
+            Assert.assertTrue(true, "Navigated to Location Change page successfully");
+        }
         Wrapper.clickWebElement(Wrapper.findWebElement(xpath_LocationChangeAction));
     }
 
@@ -1082,7 +1105,8 @@ public class HCMCoreHR {
         Thread.sleep(8000);
     }
     
-
+    By xpath_ThirdPageValidation=By.xpath("//span[contains(@aria-label,'Seniority dates')]");
+    
     public void submitLocationChangeRequest(String LocationChangeDate) throws Exception {
         Wrapper.selectDate(
             Wrapper.findWebElement(xpath_LocationChangeDate),
@@ -1093,6 +1117,7 @@ public class HCMCoreHR {
             xpath_DatePickerNext
         );
 
+        attachStepEvidence("Entered location change date ");
         // Wait by locator (not cached WebElement), then click a fresh element
         Wrapper.waitForpresenceOfElementLocated(xpath_LocationChangeWay);
         Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
@@ -1109,7 +1134,7 @@ public class HCMCoreHR {
         Thread.sleep(5000);
         Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
                 .elementToBeClickable(xpath_LocationChangeWhy)).click();
-
+        
         // Select "Work Location"
         By reasonOption = xpath_ReasonSelection("Work Location");
         Wrapper.waitForpresenceOfElementLocated(reasonOption);
@@ -1128,6 +1153,7 @@ public class HCMCoreHR {
         Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
                 .elementToBeClickable(reportingEstablishmentOption)).click();
         
+        attachStepEvidence("Selected reporting establishment for location change request.");
         //Reporting Location
         Wrapper.waitForpresenceOfElementLocated(xpath_ReportingLocation);
         Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
@@ -1141,7 +1167,9 @@ public class HCMCoreHR {
         Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
                 .elementToBeClickable(xpath_MSSContinueButton)).click();
         
-        
+        Thread.sleep(3000);
+        Wrapper.waitForpresenceOfElementLocated(xpath_ThirdPageValidation);
+        attachStepEvidence("Seniority page is displayed after clicking continue on location change request.");
         Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
                 .elementToBeClickable(xpath_MSSSubmitButton)).click();
         
@@ -1299,7 +1327,7 @@ public class HCMCoreHR {
     }
 
     public void navigateToHistoricalChangePage() throws Exception{
-        String employeeName=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"EmployeeName");
+        String employeeName=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"EmployeeNumber");
         Wrapper.waitForpresenceOfElementLocated(xpath_EmploymentInfoValidation);
         if(Wrapper.findWebElement(xpath_EmploymentInfoValidation).isDisplayed()){
             AllureReportUtil.info("Successfully navigated to Employment Info page.");
@@ -1357,7 +1385,7 @@ public class HCMCoreHR {
                 if(Wrapper.findWebElement(xpath_WhenAndWhyPageValidation).isDisplayed()){
                     Assert.assertTrue(true, "When and Why page is displayed successfully.");
                     Wrapper.selectDate(Wrapper.findWebElement(xpath_SalaryChangeDate), EffectiveDate, xpath_ResignationRetirementDateValue, xpath_DatePickerMonth, xpath_DatePickerYear, xpath_DatePickerNext);
-                    
+                    attachStepEvidence("Entered effective date for assignment change correction.");
                     Wrapper.waitForpresenceOfElementLocated(xpath_ActionDropDown);
                     Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
                             .elementToBeClickable(xpath_ActionDropDown)).click();
@@ -1466,17 +1494,18 @@ public class HCMCoreHR {
         
     }
 
-    public void searchEmployeeForWorkingHoursChange(String EmployeeName){
+    public void searchEmployeeForWorkingHoursChange() throws Exception{
+        String EmployeeNumber=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"EmployeeNumber");
         Wrapper.waitForpresenceOfElementLocated(xpath_ChangeWorkingHoursPageValidation);
         if(Wrapper.waitForpresenceOfElementLocated(xpath_ChangeWorkingHoursPageValidation).isDisplayed()){
             AllureReportUtil.info("Successfully navigated to Employment Info page.");
             
             Wrapper.clickWebElement(Wrapper.findWebElement(xpath_EmployeeSearchBox));
-            Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_EmployeeSearchBox), EmployeeName, false);
-            if(Wrapper.findWebElement(HRAXpath(EmployeeName)).isDisplayed()){
+            Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_EmployeeSearchBox), EmployeeNumber, false);
+            if(Wrapper.findWebElement(HRAXpath(EmployeeNumber)).isDisplayed()){
                 
                 Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
-                        .elementToBeClickable(HRAXpath(EmployeeName))).click();
+                        .elementToBeClickable(HRAXpath(EmployeeNumber))).click();
             }
         }
     }
@@ -2641,6 +2670,7 @@ public class HCMCoreHR {
                 Wrapper.getWait().until(org.openqa.selenium.support.ui.ExpectedConditions
                         .elementToBeClickable(HRAXpath(EmployeeName))).click();
             }
+            Wrapper.waitForpresenceOfElementLocated(xpath_CommentSection);
             Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_CommentSection), "Cancelling work relationship for testing purpose.", false);
             attachStepEvidence("the manager filled the details in Cancel Work Relationship page and submitted the cancellation request.");
             Wrapper.clickWebElement(Wrapper.findWebElement(xpath_CancelWRSubmitButton));
@@ -2725,7 +2755,7 @@ public class HCMCoreHR {
     }
 
     public void searchEmployeeInTerminateEmploymentPage() throws Exception{
-        String EmployeeName=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"First Name");
+        String EmployeeName=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"EmployeeNumber");
         Wrapper.waitForpresenceOfElementLocated(xpath_TerminateEmploymentPageValidation);
         if(Wrapper.findWebElement(xpath_TerminateEmploymentPageValidation).isDisplayed()){
             Wrapper.clickWebElement(Wrapper.findWebElement(xpath_EmployeeSearchBox));
@@ -2876,7 +2906,7 @@ public class HCMCoreHR {
     By xpath_SearchPeopleToAddAsReports=By.xpath("//div[contains(@class,'oj-text-field-middle')]//input[contains(@id,'filter-workersLovSingleSelect')]");
     By xpath_SearchPeopleToAddAsReportsManual=By.xpath("//div[contains(@class,'oj-text-field-middle')]//input[contains(@aria-labelledby,'workersLovSingleSelect')]");
     public By xpath_SearchResultForPeopleToAddAsReport() throws Exception{
-        String ReportEmployeeName=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Report_Employee_Name");
+        String ReportEmployeeName=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Report_Employee_Number");
         String xpathValue="//oj-table[contains(@aria-label,'Workers List')]//span[contains(text(),'test')]";
         xpathValue= xpathValue.replace("test", ReportEmployeeName);
         return By.xpath(xpathValue);
@@ -2905,7 +2935,7 @@ public class HCMCoreHR {
     }
 
     public void searchEmployeeInDirectReportsPage() throws Exception{
-        String EmployeeName=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"First Name");
+        String EmployeeName=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"EmployeeNumber");
         Wrapper.waitForpresenceOfElementLocated(xpath_DirectReportsChangePageValidation);
         if(Wrapper.findWebElement(xpath_DirectReportsChangePageValidation).isDisplayed()){
             Wrapper.clickWebElement(Wrapper.findWebElement(xpath_EmployeeSearchBox));
@@ -2946,6 +2976,7 @@ public class HCMCoreHR {
         if(Wrapper.findWebElement(xpath_DirectReportsChangeWhenAndWhyPageValidation).isDisplayed()){
             Assert.assertTrue(true, "When and why page is displayed successfully after clicking on an employee in Direct Reports page.");
             Thread.sleep(5000);
+            attachStepEvidence("the manager filled the details in When and why page for changing direct report information.");
             Wrapper.selectDate(Wrapper.findWebElement(xpath_ChangeStartDate), changeStartDate, xpath_ResignationRetirementDateValue, xpath_DatePickerMonth, xpath_DatePickerYear, xpath_DatePickerNext);
             
             Wrapper.waitForpresenceOfElementLocated(xpath_WayToChange);
@@ -2976,7 +3007,7 @@ public class HCMCoreHR {
     }
 
     public void fillDirectReportsInfoChangePage() throws Exception{
-        String reportEmployeeName=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Report_Employee_Name");
+        String reportEmployeeName=ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Report_Employee_Number");
         Wrapper.waitForpresenceOfElementLocated(xpath_DirectReportsInfoChangePageValidation);
         if(Wrapper.findWebElement(xpath_DirectReportsInfoChangePageValidation).isDisplayed()){
             Assert.assertTrue(true, "Change direct report info page is displayed successfully after clicking Continue button on When and why page.");
