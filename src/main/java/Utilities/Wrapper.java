@@ -10,6 +10,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Random;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
@@ -89,6 +90,21 @@ public class Wrapper extends BaseClass {
         }
     }
 
+    public static void doubleClickWebElement(WebElement element) {
+        try {
+            if (element == null) {
+                throw new IllegalArgumentException("Cannot double-click a null WebElement.");
+            }
+            WebElement clickableElement = waitForElementToBeClickable(element);
+            Actions actions = new Actions(getDriverOrThrow());
+            actions.doubleClick(clickableElement).perform();
+            // Actions actions = new Actions(driver);
+            // actions.doubleClick(Wrapper.findWebElement(xpath_ProjectCodeClick)).perform();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Error double-clicking WebElement: " + e.getMessage(), e);
+        }
+    }
     
     public static void redwoodSync() {
     try {
@@ -249,6 +265,19 @@ public class Wrapper extends BaseClass {
         return activeDriver.findElement(locator);
     }
 
+    public boolean isWebElementDisplayedInPage(WebElement ele) {      
+		boolean flag = false;
+		try {
+			if (ele.isDisplayed()) {
+				flag = true;              
+			}
+			return flag;
+		} catch (Exception e) {          
+			flag = false;
+		}
+		return flag;
+	}
+
     public static List<WebElement> findWebElements(By locator) {
         WebDriver activeDriver = getDriverOrThrow();
         return activeDriver.findElements(locator);
@@ -260,7 +289,7 @@ public class Wrapper extends BaseClass {
         
         // 1. Click the date input to open the calendar widget
         clickWebElement(datePicker);
-
+        Thread.sleep(3000);
         // 2. Navigate to correct month & year
         String[] dateParts = dateValue.split("/");
         String targetMonth = dateParts[1];
@@ -392,5 +421,34 @@ public class Wrapper extends BaseClass {
         }
     }
 
+public static void scrollDown(){
+        JavascriptExecutor js = (JavascriptExecutor) driver;
+js.executeScript("window.scrollBy(0,500)");
+    }
 
+    public static void scrollUp(){
+       JavascriptExecutor js = (JavascriptExecutor) driver;
+js.executeScript("window.scrollBy(0,-500)");
+    }
+public static String randomStringGenerator() {
+ 
+        int length = 4;
+        String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+        StringBuilder randomString = new StringBuilder();
+        Random random = new Random();
+        
+ 
+        for (int i = 0; i < length; i++) {
+            randomString.append(characters.charAt(random.nextInt(characters.length())));
+        }
+ 
+        System.out.println(randomString.toString());
+        return randomString.toString();
+    }
+
+
+
+    
+
+ 
 }

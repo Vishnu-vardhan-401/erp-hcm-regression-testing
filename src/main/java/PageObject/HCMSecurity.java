@@ -1,17 +1,23 @@
 package PageObject;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.testng.Assert;
+import org.testng.asserts.SoftAssert;
 
 import Utilities.AllureReportUtil;
 import Utilities.ExcelReader;
 import Utilities.ScenarioContext;
+import Utilities.TileValidationReportUtil;
 import Utilities.Wrapper;
 
 public class HCMSecurity {
@@ -19,7 +25,6 @@ public class HCMSecurity {
     WebDriver driver;
 
     public HCMSecurity(WebDriver driver) {
-        
         this.driver = driver;
     }
 
@@ -30,9 +35,9 @@ public class HCMSecurity {
     String userName;
     String passWord;
 
-    String EXCEL_PATH = "src/test/resources/TestData/OracleHCM_NEW.xlsx";
+    String EXCEL_PATH = "src/test/resources/TestData/OracleHCMRegressionTestData.xlsx";
     String SHEET_NAME = "Security";
-    String KEY_COLUMN_HEADER = "Test Case"; 
+    String KEY_COLUMN_HEADER = "Test Case";
 
     private String getCurrentTestCaseKey() {
         String key = ScenarioContext.getTestCaseKey();
@@ -41,734 +46,637 @@ public class HCMSecurity {
         }
         return key;
     }
-    String currentScenarioTag= getCurrentTestCaseKey();
+    String currentScenarioTag = getCurrentTestCaseKey();
+
+    // Accumulates failures across the whole "Approved Menu Options" list for
+    // this scenario, so one AssertionError at the end reports everything that
+    // was missing, rather than stopping at the first miss.
+    private SoftAssert overallSoftAssert;
 
     private void attachStepEvidence(String stepName) {
         AllureReportUtil.attachScreenshot(driver, "Step screenshot - " + stepName);
     }
 
-    //xpath Locators
-    //Login Page
-    By xpath_UserName= By.xpath("//input[contains(@id, 'username')]");
-    By xpath_Password=By.xpath("//input[contains(@id, 'password')]");
-    By xpath_SigninButton=By.xpath("//*[text()='Sign In']");
+    // =========================================================
+    // Structured logging - every validation outcome is reported in one
+    // consistent, professional format instead of a bare sentence, so log
+    // entries read like a test-management/reporting tool's output and can
+    // be scanned, filtered, or grepped by status, test case, or section:
+    //
+    //   [STATUS] Test Case: <tag> | Section: <section> | Menu Item: '<item>' | Detail: <detail>
+    // =========================================================
+
+    private static final String LOG_PASS = "PASS";
+    private static final String LOG_FAIL = "FAIL";
+    private static final String LOG_SKIPPED = "SKIPPED";
+    private static final String LOG_INFO = "INFO";
 
     /**
-	 *Login method used for logging into Oracle HCM Application
-      by retrieving credentials from Excel.
-     * Scripted By:gaddem[Gadde Madhukar]  
-	**/
-    public void enterCredentials() throws Exception {
-        try {
-            userName = ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Username");
-            passWord = ExcelReader.getCellDataByKey(EXCEL_PATH,SHEET_NAME,KEY_COLUMN_HEADER,currentScenarioTag,"Password");
-            Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_UserName), userName, false);
-            Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_Password), passWord, false);   
-        }catch(Exception e) {
-            e.printStackTrace();
-            throw new Exception("Error entering credentials: " + e.getMessage());
-        } 
+     * Builds one structured log line for a section-level event (no specific
+     * menu item involved) - e.g. a missing tab, a missing "Show More" link,
+     * or a section being skipped because no data was configured for it.
+     */
+    private String buildLogMessage(String status, String section, String detail) {
+        return buildLogMessage(status, section, null, detail);
     }
 
     /**
-     * Open the dashboard page after successful login.
-     * Scripted By:gaddem[Gadde Madhukar]
+     * Builds one structured log line for a menu-item-level event, e.g. a
+     * single tile/link being found or not found under a given section.
      */
-    public void openDashboardPage(){
+    private String buildLogMessage(String status, String section, String menuItem, String detail) {
+        StringBuilder sb = new StringBuilder();
+        sb.append('[').append(status).append("] ");
+        sb.append("Test Case: ").append(currentScenarioTag);
+        sb.append(" | Section: ").append(section);
+        if (menuItem != null && !menuItem.isEmpty()) {
+            sb.append(" | Menu Item: '").append(menuItem).append("'");
+        }
+        sb.append(" | Detail: ").append(detail);
+        return sb.toString();
+    }
+
+    // =========================================================
+    // Login Page locators
+    // =========================================================
+
+    By xpath_UserName = By.xpath("//input[contains(@id, 'username')]");
+    By xpath_Password = By.xpath("//input[contains(@id, 'password')]");
+    By xpath_SigninButton = By.xpath("//*[text()='Sign In']");
+
+    /**
+     * Login method used for logging into Oracle HCM Application
+     * by retrieving credentials from Excel.
+     */
+    public void enterCredentials() throws Exception {
+        try {
+            userName = ExcelReader.getCellDataByKey(EXCEL_PATH, SHEET_NAME, KEY_COLUMN_HEADER, currentScenarioTag, "Username");
+            passWord = ExcelReader.getCellDataByKey(EXCEL_PATH, SHEET_NAME, KEY_COLUMN_HEADER, currentScenarioTag, "Password");
+            Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_UserName), userName, false);
+            Wrapper.WebElementsendKeys(Wrapper.findWebElement(xpath_Password), passWord, false);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new Exception("Error entering credentials: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Click Sign In and wait for the dashboard to fully load before any
+     * validation begins.
+     */
+    public void openDashboardPage() {
         try {
             Thread.sleep(2000);
             Wrapper.clickWebElement(Wrapper.findWebElement(xpath_SigninButton));
-        }catch(InterruptedException e) {            
+            AllureReportUtil.info("Clicked Sign In. Waiting 10 seconds for the dashboard to load completely.");
+            Thread.sleep(10000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             e.printStackTrace();
             throw new RuntimeException("Error clicking Sign In button: " + e.getMessage());
-        }  
+        }
+    }
+
+    // =========================================================
+    // Show More locator (the tab locators themselves are now built
+    // dynamically in getTabLocatorForSection() below)
+    // =========================================================
+
+    // Matches every "Show More" anchor on the page, not scoped to any
+    // particular @group attribute - different sections (Benefits, Recruiting,
+    // Treasury, etc.) can render this under different @group values, so a
+    // narrower locator risks silently finding nothing for some sections.
+    // Because more than one such anchor can exist in the DOM at once, callers
+    // must pick the currently VISIBLE one (see firstVisible() below) rather
+    // than assuming a fixed index/position.
+    By xpath_ShowMore = By.xpath("//a[normalize-space(text())='Show More']");
+
+    /**
+     * Given a list of same-locator matches (e.g. multiple "Show More"
+     * anchors present in the DOM at once, one per section), returns the
+     * first one that's actually visible - not just the first in DOM order,
+     * since DOM order doesn't necessarily correspond to which section/tab
+     * is currently active.
+     */
+    private Optional<WebElement> firstVisible(List<WebElement> elements) {
+        return elements.stream().filter(WebElement::isDisplayed).findFirst();
+    }
+
+    // =========================================================
+    // Section name -> tab locator / Excel column mapping
+    //
+    // Fully dynamic - no code change needed to support a new section/tab.
+    // In "Approved Menu Options", use the section's exact visible tab text
+    // (e.g. "My Client Groups", "HR Connect", "Tools"), or "Me" for the
+    // default landing page. Suffix with " Showmore" (case-insensitive) to
+    // validate that section's Show More tiles, e.g. "Me, Me Showmore,
+    // My Client Groups, My Client Groups Showmore, HR Connect,
+    // HR Connect Showmore, Tools, Tools Showmore". Always use the
+    // fully-qualified form (section name + "Showmore") - a bare "Showmore"
+    // on its own is not supported, since it would be ambiguous about which
+    // section it belongs to.
+    //
+    // Matching Excel columns follow the naming convention:
+    //   Tiles_<SectionNameWithNoSpaces>            e.g. Tiles_MyClientGroups
+    //   Tiles_<SectionNameWithNoSpaces>_Showmore   e.g. Tiles_MyClientGroups_Showmore
+    // =========================================================
+
+    private By getTabLocatorForSection(String sectionName) {
+        if (sectionName.trim().equalsIgnoreCase("me")) {
+            return null; // default landing section, no tab click needed
+        }
+        return By.xpath("//a[contains(text(),'" + sectionName.trim() + "')]");
+    }
+
+    private String getExcelColumnForSection(String sectionName, boolean isShowMore) {
+        String key = "Tiles_" + sectionName.trim().replaceAll("\\s+", "");
+        return isShowMore ? key + "_Showmore" : key;
+    }
+
+    // =========================================================
+    // Shared private helpers
+    // =========================================================
+
+    private void forcedWait(String reason) {
+        forcedWait(reason, 3000);
+    }
+
+    private void forcedWait(String reason, long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     /**
-     * Capture the dashboard items for the current user.
-     * Scripted By:gaddem[Gadde Madhukar]
+     * Sets the page zoom level via JS so more tiles fit within the visible
+     * viewport without needing to resize the actual browser window.
      */
-    List<String> dashboardItems;
-    List<String> capturedDashboardItems;
-
-     /**
-     * Utility method to get the active WebDriver instance.
-     * This method retrieves the WebDriver from the ScenarioContext, which is set in the Hooks @Before method.
-     * Scripted By: gaddem [Gadde Madhukar]
-     * Note: This method should be used in step definitions to ensure that the correct WebDriver instance is used for interactions.
-     */
-    public void captureDashboardItems(By dashboardItemsLocator,int count){ 
+    private void setZoomLevel(int zoomPercent) {
         try {
-            
-            dashboardItems = new ArrayList<>();
-            capturedDashboardItems = new ArrayList<>();
-            if(Wrapper.findWebElements(dashboardItemsLocator).size() == count) {
-                
-                List<WebElement> items = Wrapper.findWebElements(dashboardItemsLocator);
-                for (WebElement item : items) {
-                    String itemName = item.getText().trim();
-                    if (!itemName.isEmpty()) {
-                        dashboardItems.add(itemName);
-                        capturedDashboardItems.add(itemName);
-                    }
-                }
-                AllureReportUtil.info("Captured " + dashboardItems.size() + " dashboard items are: " + dashboardItems.toString());
-                dashboardItems.clear();
-            }
-            else {
-                AllureReportUtil.info("No dashboard items found using locator: " + dashboardItemsLocator.toString());
-                Assert.fail("Expected " + count + " dashboard items, but found " + Wrapper.findWebElements(dashboardItemsLocator).size() + " using locator: " + dashboardItemsLocator.toString());
-                AllureReportUtil.info("Expected " + count + " dashboard items, but found " + Wrapper.findWebElements(dashboardItemsLocator).size() + " using locator: " + dashboardItemsLocator.toString());
-            }
+            JavascriptExecutor js = (JavascriptExecutor) driver;
+            js.executeScript("document.body.style.zoom='" + zoomPercent + "%'");
         } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("Error capturing dashboard items: " + e.getMessage());
+            AllureReportUtil.info("Could not set zoom level to " + zoomPercent + "%: " + e.getMessage());
         }
     }
 
-    //CE Time Entry Clerk
-    // xpath locator
-
-    By xpath_MyClientGroups=By.xpath("//a[contains(text(),'My Client Groups')]");
-    By xpath_MyClientGroupsTilesItems=By.xpath("//div[contains(@id,'yourapps_groupNode_workforce')]//a[contains(@class,'app')]");
-    By xpath_MyClientGroupsQuickActionItems=By.xpath("//div[contains(@class,'quickactions')]//a[contains(@target,'my_org_')]");
-    
-    By xpath_HRConnect=By.xpath("//a[contains(text(),'HR Connect')]");
-    By xpath_HRConnectTilesItems=By.xpath("//div[contains(@id,'yourapps_groupNode_HR')]//a[contains(@class,'app')]");
-    By xpath_HRConnectQuickActionItems=By.xpath("//div[contains(@class,'quickactions')]//a[contains(@target,'itemNode')]");
-    
-    By xpath_Tools=By.xpath("//a[contains(text(),'Tools')]");
-    By xpath_ToolsTilesItems=By.xpath("//div[contains(@id,'yourapps_groupNode_tools')]//a[contains(@class,'app')]");
-    By xpath_ToolsQuickActionItems=By.xpath("//div[contains(@class,'quickactions')]//a[contains(@target,'atk_')]");
-    
-    public void captureMyClientGroupsDashboardItems(){
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MyClientGroups));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_MyClientGroupsTilesItems));
-        attachStepEvidence("Captured My Client Groups dashboard items");
-        captureDashboardItems(xpath_MyClientGroupsTilesItems, 1);
-        captureDashboardItems(xpath_MyClientGroupsQuickActionItems, 2);
-    }
-    public void captureHRConnectDashboardItems(){
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_HRConnect));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_HRConnectTilesItems));
-        attachStepEvidence("Captured HR Connect dashboard items");
-        captureDashboardItems(xpath_HRConnectTilesItems, 2);
-        captureDashboardItems(xpath_HRConnectQuickActionItems, 1);
-    }
-    public void captureToolsDashboardItems(){
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_Tools));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_ToolsTilesItems));
-        attachStepEvidence("Captured Tools dashboard items");
-        captureDashboardItems(xpath_ToolsTilesItems, 2);
-        captureDashboardItems(xpath_ToolsQuickActionItems, 1);
-    }
-
-    public void validateDashboardItems(){
-        if(capturedDashboardItems == null || capturedDashboardItems.isEmpty()) {
-            Assert.fail("No dashboard items captured to validate.");
-            throw new RuntimeException("No dashboard items captured to validate.");
-        }
-        else {
-            Assert.assertTrue(!capturedDashboardItems.isEmpty(), "Validated captured dashboard items");
+    private boolean isPageFullyLoaded() {
+        try {
+            JavascriptExecutor js = (JavascriptExecutor) driver;
+            String readyState = (String) js.executeScript("return document.readyState");
+            return "complete".equalsIgnoreCase(readyState);
+        } catch (Exception e) {
+            return false;
         }
     }
 
+    /**
+     * Confirms the page/DOM has actually finished loading before validation
+     * starts. Waits and re-checks a few times; if it still isn't ready,
+     * reloads the page as a last resort and waits again.
+     * Returns true if a reload was triggered, so the caller can re-navigate
+     * back to whatever tab/Show More state was lost by the reload.
+     */
+    private boolean ensurePageIsFullyLoaded(String sectionName) {
+        int attempts = 0;
+        int maxAttempts = 3;
 
-    //CE Compensation Labor Relations Staff Exclude Retirees
+        while (!isPageFullyLoaded() && attempts < maxAttempts) {
+            AllureReportUtil.info("Page/DOM not fully loaded yet for '" + sectionName + "'. Waiting (attempt "
+                    + (attempts + 1) + " of " + maxAttempts + ").");
+            forcedWait("page/DOM to finish loading for '" + sectionName + "'", 5000);
+            attempts++;
+        }
 
-    //MyClientGroups
-    //xpath_MyClientGroupsTilesItems-->5
-    By xpath_ShowMore=By.xpath("//div[contains(@group,'workforce_management')]/a[contains(text(),'Show More')]");
-    // By xpath_ShowMoreQuickActionItems=By.xpath("//a[contains(@type,'quickaction') and contains(@target,'my_org') and not(contains(@group,'groupNode'))]");
-    By xpath_ShowMoreQuickActionItems=By.xpath("//a[contains(@type,'quickaction') and not(contains(@group,'groupNode'))]");
-    
-    //xpath_HRConnect
-    //xpath_HRConnectTilesItems-->6
-    //xpath_HRConnectQuickActionItems-->2
-
-    //xpath_Tools
-    //xpath_ToolsTilesItems-->3
-    //xpath_ToolsQuickActionItems-->1
-
-    public void captureCompensationLaborRelationsStaffExcludeRetireesMyClientGroupsDashboardItems(){
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MyClientGroups));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_MyClientGroupsTilesItems));
-        attachStepEvidence("Clicked Show More to capture additional My Client Groups dashboard items");
-        captureDashboardItems(xpath_MyClientGroupsTilesItems, 5);
-
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_ShowMore));
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_ShowMore));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_ShowMoreQuickActionItems));
-        attachStepEvidence("Captured additional My Client Groups Quick Action items after clicking Show More");
-        captureDashboardItems(xpath_ShowMoreQuickActionItems, 10);
+        if (!isPageFullyLoaded()) {
+            AllureReportUtil.info("Page/DOM still not loaded for '" + sectionName + "' after " + maxAttempts
+                    + " attempts. Reloading the page.");
+            driver.navigate().refresh();
+            forcedWait("page reload to complete for '" + sectionName + "'", 10000);
+            return true;
+        }
+        return false;
     }
 
-    public void captureCompensationLaborRelationsStaffExcludeRetireesHRConnectDashboardItems(){
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_HRConnect));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_HRConnectTilesItems));
-        attachStepEvidence("Captured HR Connect dashboard items");
-        captureDashboardItems(xpath_HRConnectTilesItems, 6);
-        captureDashboardItems(xpath_HRConnectQuickActionItems, 2);
+    /**
+     * Scrolls the page all the way to the bottom via JS. Several sections
+     * (notably "Me") lazy-render their lower content only once scrolled
+     * into view, so the "Show More" link can be absent/not-visible until
+     * this runs - checking for it without scrolling first is unreliable.
+     */
+    private void scrollToBottom(String context) {
+        try {
+            ((JavascriptExecutor) driver).executeScript("window.scrollTo(0, document.body.scrollHeight)");
+        } catch (Exception e) {
+            AllureReportUtil.info("Could not scroll to bottom for '" + context + "': " + e.getMessage());
+        }
     }
 
-    public void captureCompensationLaborRelationsStaffExcludeRetireesToolsDashboardItems(){
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_Tools));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_ToolsTilesItems));
-        attachStepEvidence("Captured Tools dashboard items");
-        captureDashboardItems(xpath_ToolsTilesItems, 3);
-        captureDashboardItems(xpath_ToolsQuickActionItems, 1);
+    /**
+     * Scrolls down the page in small steps, checking after each step whether
+     * any element matching the given locator has become visible - rather
+     * than jumping straight to the bottom, which can skip right past an
+     * element that only renders when it's somewhere in the middle of the
+     * viewport (lazy-rendered content that appears/disappears as it scrolls
+     * through view, not just once scrolled all the way down).
+     *
+     * Starts from the top of the page each time so the scan always covers
+     * the full page regardless of where a previous check left the scroll
+     * position. Stops early once the element is found, or once scrolling
+     * stops making progress (i.e. the bottom of the page has been reached).
+     */
+    private boolean scrollIncrementallyUntilVisible(By locator, String context) {
+        JavascriptExecutor js = (JavascriptExecutor) driver;
+        int stepPixels = 150;
+        int maxSteps = 25; // generous ceiling so even very long "Show More" lists are fully covered
+
+        try {
+            js.executeScript("window.scrollTo(0, 0)");
+        } catch (Exception e) {
+            AllureReportUtil.info("Could not scroll to top before incremental scan for '" + context + "': " + e.getMessage());
+        }
+        forcedWait("resetting to top before incremental scan for '" + context + "'", 300);
+
+        for (int step = 0; step < maxSteps; step++) {
+            List<WebElement> matches = Wrapper.findWebElements(locator);
+            if (matches.stream().anyMatch(WebElement::isDisplayed)) {
+                return true;
+            }
+
+            long beforeY;
+            try {
+                beforeY = ((Number) js.executeScript("return window.pageYOffset || document.documentElement.scrollTop;")).longValue();
+                js.executeScript("window.scrollBy(0, arguments[0]);", stepPixels);
+            } catch (Exception e) {
+                AllureReportUtil.info("Could not scroll incrementally for '" + context + "': " + e.getMessage());
+                break;
+            }
+            forcedWait("incremental scroll step while " + context, 300);
+
+            long afterY = beforeY;
+            try {
+                afterY = ((Number) js.executeScript("return window.pageYOffset || document.documentElement.scrollTop;")).longValue();
+            } catch (Exception e) {
+                // If we can't read the new position, just fall through and
+                // let the final check below decide.
+            }
+            if (afterY <= beforeY) {
+                // Scrolling made no further progress - already at the bottom.
+                break;
+            }
+        }
+
+        List<WebElement> finalMatches = Wrapper.findWebElements(locator);
+        return finalMatches.stream().anyMatch(WebElement::isDisplayed);
     }
 
-    // CE Payroll Staff Full Population
-    //MyClientGroups
-    //xpath_MyClientGroupsTilesItems-->6
-    //xpath_ShowMore
-    //xpath_ShowMoreQuickActionItems-->42
+    /**
+     * Zooms out to 60%, confirms the page/DOM is fully loaded (reloading if
+     * necessary), then takes a screenshot at the top of the page and another
+     * after scrolling to the bottom - so both screenshots together cover
+     * every tile in the section. Exactly two screenshots per section (or per
+     * Show More), not one per tile.
+     *
+     * @param reNavigateIfReloaded callback that re-clicks whatever tab/Show More
+     *                             was active before a reload. Pass null if nothing
+     *                             needs re-navigating (e.g. the "Me" section).
+     */
+    private void captureFullSectionScreenshot(String sectionName, Runnable reNavigateIfReloaded) {
+        setZoomLevel(60);
+        forcedWait("zoom adjustment to settle for '" + sectionName + "'", 3000);
 
-    //xpath_HRConnect
-    //xpath_HRConnectTilesItems-->5
-    //xpath_HRConnectQuickActionItems-->2
+        boolean reloaded = ensurePageIsFullyLoaded(sectionName);
+        if (reloaded && reNavigateIfReloaded != null) {
+            AllureReportUtil.info("Page was reloaded - re-navigating back to '" + sectionName + "' before continuing.");
+            reNavigateIfReloaded.run();
+            forcedWait("re-navigation back to '" + sectionName + "' to settle", 5000);
+        }
 
-    //xpath_Tools
-    //xpath_ToolsTilesItems-->3
-    //xpath_ToolsQuickActionItems-->1
-    public void capturePayrollStaffFullPopulationMyClientGroupsDashboardItems(){
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MyClientGroups));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_MyClientGroupsTilesItems));
-        attachStepEvidence("My Client Groups dashboard items");
-        captureDashboardItems(xpath_MyClientGroupsTilesItems, 6);
+        JavascriptExecutor js = (JavascriptExecutor) driver;
 
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_ShowMore));
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_ShowMore));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_ShowMoreQuickActionItems));
-        attachStepEvidence("Captured additional My Client Groups Quick Action items after clicking Show More");
-        captureDashboardItems(xpath_ShowMoreQuickActionItems, 42);
+        try {
+            js.executeScript("window.scrollTo(0, 0)");
+        } catch (Exception e) {
+            AllureReportUtil.info("Could not scroll to top for '" + sectionName + "': " + e.getMessage());
+        }
+        attachStepEvidence("Top view - " + sectionName);
+
+        try {
+            js.executeScript("window.scrollTo(0, document.body.scrollHeight)");
+        } catch (Exception e) {
+            AllureReportUtil.info("Could not scroll to bottom for '" + sectionName + "': " + e.getMessage());
+        }
+        forcedWait("scroll to bottom to settle for '" + sectionName + "'", 3000);
+        attachStepEvidence("Bottom view - " + sectionName);
+
+        try {
+            js.executeScript("window.scrollTo(0, 0)");
+        } catch (Exception e) {
+            // ignore - purely cosmetic, doesn't affect tile detection
+        }
     }
 
-    public void capturePayrollStaffFullPopulationHRConnectDashboardItems(){
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_HRConnect));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_HRConnectTilesItems));
-        attachStepEvidence("Captured HR Connect dashboard items");
-        captureDashboardItems(xpath_HRConnectTilesItems, 5);
-        captureDashboardItems(xpath_HRConnectQuickActionItems, 2);
+    /**
+     * Checks every expected tile for one section/Show-More against the live
+     * page, logs a present/missing message per tile, attaches a screenshot
+     * for each missing tile, records one summary row in the tabular report,
+     * and fails overallSoftAssert if anything is missing.
+     */
+    private void validateSectionAndReport(String reportSectionLabel, String excelColumn) throws IOException {
+        String tileNamesRaw = ExcelReader.getCellDataByKey(
+                EXCEL_PATH, SHEET_NAME, KEY_COLUMN_HEADER, currentScenarioTag, excelColumn);
+
+        if (tileNamesRaw == null || tileNamesRaw.trim().isEmpty()) {
+            AllureReportUtil.info(buildLogMessage(LOG_SKIPPED, reportSectionLabel,
+                    "No expected menu items are configured in Excel column '" + excelColumn
+                            + "' for this test case, so this section was not validated."));
+            return;
+        }
+
+        List<String> expectedTiles = Arrays.stream(tileNamesRaw.split(","))
+                .map(String::trim)
+                .filter(name -> !name.isEmpty())
+                .collect(Collectors.toList());
+
+        List<String> actualPresentTiles = new ArrayList<>();
+        List<String> missingTiles = new ArrayList<>();
+
+        for (String tileName : expectedTiles) {
+            try {
+                forcedWait("checking tile '" + tileName + "' under '" + reportSectionLabel + "'", 300);
+
+                By dynamicXpath = By.xpath("//a[normalize-space(text())='" + tileName + "']");
+                List<WebElement> matchingTiles = Wrapper.findWebElements(dynamicXpath);
+                boolean isAnyVisible = matchingTiles.stream().anyMatch(WebElement::isDisplayed);
+
+                if (!isAnyVisible) {
+                    // Some tiles (e.g. items near the bottom of a long "Show More"
+                    // list, like "Year End Documents") only render once scrolled
+                    // into view - the same lazy-render behavior already seen with
+                    // the "Show More" link itself. A tile could be rendered
+                    // anywhere on the page, not just at the very bottom, so scroll
+                    // down step by step and check after each step, rather than
+                    // jumping straight to the bottom and potentially scrolling
+                    // straight past it.
+                    isAnyVisible = scrollIncrementallyUntilVisible(dynamicXpath,
+                            "checking tile '" + tileName + "' under '" + reportSectionLabel + "'");
+                }
+
+                if (isAnyVisible) {
+                    AllureReportUtil.info("\"" + tileName + "\" Tile/Link is present in the \"" + reportSectionLabel + "\" section as expected");
+                    actualPresentTiles.add(tileName);
+                } else {
+                    String failMessage = "\"" + tileName + "\" Tile/Link is NOT present in the \"" + reportSectionLabel + "\" section as expected";
+                    AllureReportUtil.info(failMessage);
+                    attachStepEvidence(failMessage);
+                    missingTiles.add(tileName);
+                }
+            } catch (Exception e) {
+                // Any unexpected exception (stale element, timeout, etc.) while checking
+                // one tile must not abort validation of the remaining tiles in this
+                // section - log it as a failure for this tile only, and move on.
+                String exceptionMessage = "\"" + tileName + "\" Tile/Link is NOT present in the \"" + reportSectionLabel
+                        + "\" section as expected - an exception occurred while checking it: " + e.getMessage();
+                AllureReportUtil.info(exceptionMessage);
+                attachStepEvidence(exceptionMessage);
+                missingTiles.add(tileName);
+            }
+        }
+
+        String expectedJoined = String.join(", ", expectedTiles);
+        String actualJoined = actualPresentTiles.isEmpty() ? "None" : String.join(", ", actualPresentTiles);
+
+        String comments;
+        if (missingTiles.isEmpty()) {
+            comments = "All tiles present as expected.";
+        } else {
+            comments = missingTiles.stream()
+                    .map(t -> "'" + t + "' could not be located")
+                    .collect(Collectors.joining("; "));
+            overallSoftAssert.fail(reportSectionLabel + " - " + comments);
+        }
+
+        TileValidationReportUtil.addResult(currentScenarioTag, reportSectionLabel, expectedJoined, actualJoined, comments);
     }
 
-    public void capturePayrollStaffFullPopulationToolsDashboardItems(){
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_Tools));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_ToolsTilesItems));
-        attachStepEvidence("Captured Tools dashboard items");
-        captureDashboardItems(xpath_ToolsTilesItems, 3);
-        captureDashboardItems(xpath_ToolsQuickActionItems, 1);
+    /**
+     * Navigates to a main tab section (or stays on "Me" for the default
+     * landing page), then validates its tiles.
+     */
+    private void navigateAndValidateSection(String sectionName) throws IOException {
+        By tabLocator = getTabLocatorForSection(sectionName);
+
+        if (tabLocator != null) {
+            Optional<WebElement> visibleTab = firstVisible(Wrapper.findWebElements(tabLocator));
+            if (visibleTab.isEmpty()) {
+                String comments = "The '" + sectionName + "' tab could not be located on the page.";
+                String failMessage = buildLogMessage(LOG_FAIL, sectionName,
+                        "Navigation tab is missing or not visible on the dashboard, so no menu items under it could be validated.");
+                AllureReportUtil.info(failMessage);
+                attachStepEvidence(failMessage);
+                overallSoftAssert.fail(comments);
+                TileValidationReportUtil.addResult(currentScenarioTag, sectionName, "-", "-", comments);
+                return;
+            }
+            WebElement tabElement = visibleTab.get();
+            Wrapper.clickWebElement(tabElement);
+            AllureReportUtil.info("\"" + sectionName + "\" tab is clicked.");
+            // Wait only for this specific tab element to remain visible after the
+            // click - not visibilityOfAllElementsLocatedBy(tabLocator), which
+            // would require every element matching the locator on the page to be
+            // visible at once (the same issue fixed for the Show More link below).
+            //
+            // Some apps (Oracle ADF-style partial page rendering) recreate the
+            // clicked element's DOM node the moment it's clicked, even though the
+            // click itself succeeded and the UI updated correctly - which makes
+            // this exact WebElement handle go stale. That's a rendering detail,
+            // not a real validation failure, so it must not abort the section -
+            // silently continue into the actual tile checks below.
+            try {
+                Wrapper.getWait().until(ExpectedConditions.visibilityOf(tabElement));
+            } catch (Exception e) {
+                // Intentionally not logged - a stale/timed-out handle here is
+                // expected UI behavior, not a validation problem worth reporting.
+            }
+            forcedWait(sectionName + " tab");
+        } else {
+            forcedWait(sectionName + " (dashboard landing section)");
+        }
+
+        Runnable reNavigate = (tabLocator == null) ? null
+                : () -> firstVisible(Wrapper.findWebElements(tabLocator)).ifPresent(Wrapper::clickWebElement);
+        captureFullSectionScreenshot(sectionName, reNavigate);
+
+        String excelColumn = getExcelColumnForSection(sectionName, false);
+        if (excelColumn == null) {
+            AllureReportUtil.info(buildLogMessage(LOG_SKIPPED, sectionName,
+                    "No matching Excel column mapping exists for menu option '" + sectionName + "', so this section was not validated."));
+            return;
+        }
+        validateSectionAndReport(sectionName, excelColumn);
     }
 
-    //CE Tech Support View Only Data
-    //MyClientGroups
-    //xpath_MyClientGroupsTilesItems-->2
-    //xpath_ShowMore
-    //xpath_ShowMoreQuickActionItems-->10
+    /**
+     * Clicks "Show More" under the given base section (if present) and
+     * validates the additional tiles it reveals.
+     */
+    private void validateShowMoreForSection(String baseSectionName, String reportLabel) throws IOException {
+        By tabLocator = getTabLocatorForSection(baseSectionName);
 
-    //xpath_HRConnect
-    //xpath_HRConnectTilesItems-->2
-    //xpath_HRConnectQuickActionItems-->1
+        // The "Show More" link is often below the initial viewport (especially
+        // under "Me", which has a long tile list) and some sections only
+        // render/reveal it once the page is scrolled down - so check for it
+        // only after scrolling to the bottom, and retry once more before
+        // concluding it's genuinely missing.
+        scrollToBottom(baseSectionName + " - locating 'Show More'");
+        forcedWait("scrolling to bottom before locating 'Show More' under '" + baseSectionName + "'", 1000);
 
-    //xpath_Tools
-    //xpath_ToolsTilesItems-->3
-    //xpath_ToolsQuickActionItems-->1
+        Optional<WebElement> visibleShowMore = firstVisible(Wrapper.findWebElements(xpath_ShowMore));
+        if (visibleShowMore.isEmpty()) {
+            // Retry once - scroll to bottom again in case the first scroll
+            // triggered additional lazy-loaded content that pushed the real
+            // bottom (and the Show More link) further down.
+            scrollToBottom(baseSectionName + " - retry locating 'Show More'");
+            forcedWait("retry scroll before locating 'Show More' under '" + baseSectionName + "'", 1500);
+            visibleShowMore = firstVisible(Wrapper.findWebElements(xpath_ShowMore));
+        }
 
-    public void captureTechSupportViewOnlyDataMyClientGroupsDashboardItems(){
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MyClientGroups));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_MyClientGroupsTilesItems));
-        attachStepEvidence("Captured My Client Groups dashboard items");
-        captureDashboardItems(xpath_MyClientGroupsTilesItems, 2);
+        if (visibleShowMore.isEmpty()) {
+            String comments = "The 'Show More' link could not be located under the '" + baseSectionName + "' section.";
+            String failMessage = buildLogMessage(LOG_FAIL, reportLabel,
+                    "'Show More' link is missing or not visible under the '" + baseSectionName
+                            + "' section, so its additional menu items could not be validated.");
+            AllureReportUtil.info(failMessage);
+            attachStepEvidence(failMessage);
+            overallSoftAssert.fail(comments);
+            TileValidationReportUtil.addResult(currentScenarioTag, reportLabel, "-", "-", comments);
+            return;
+        }
 
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_ShowMore));
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_ShowMore));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_ShowMoreQuickActionItems));
-        attachStepEvidence("Captured additional My Client Groups Quick Action items after clicking Show More");
-        captureDashboardItems(xpath_ShowMoreQuickActionItems, 10);
+        WebElement showMoreElement = visibleShowMore.get();
+        try {
+            ((JavascriptExecutor) driver).executeScript(
+                    "arguments[0].scrollIntoView({block: 'center'});", showMoreElement);
+        } catch (Exception e) {
+            AllureReportUtil.info("Could not scroll to the 'Show More' link under '" + baseSectionName + "': " + e.getMessage());
+        }
+        forcedWait("scrolling to 'Show More' under '" + baseSectionName + "'", 1000);
+
+        Wrapper.clickWebElement(showMoreElement);
+        AllureReportUtil.info("\"Show More\" link is clicked under the \"" + baseSectionName + "\" section.");
+        // Wait for THIS specific element to still be visible after the click -
+        // not visibilityOfAllElementsLocatedBy(xpath_ShowMore), which requires
+        // every "Show More" anchor on the page to be visible at once. Since
+        // other sections' anchors typically stay hidden while a different tab
+        // is active, that condition was essentially never satisfiable and
+        // reliably timed out after the full wait duration.
+        //
+        // This app appears to re-render the DOM node the instant "Show More" is
+        // clicked (its label correctly flips to "Show Less" - the click itself
+        // works), which invalidates this exact WebElement handle even though
+        // nothing actually went wrong. That's a rendering detail, not a real
+        // failure, so it must not abort validation of this section's tiles -
+        // silently continue; the tile checks below are the real test anyway.
+        try {
+            Wrapper.getWait().until(ExpectedConditions.visibilityOf(showMoreElement));
+        } catch (Exception e) {
+            // Intentionally not logged - a stale/timed-out handle here is
+            // expected UI behavior, not a validation problem worth reporting.
+        }
+        forcedWait(baseSectionName + " - Show More");
+
+        // If a reload happens while capturing screenshots, re-click the parent
+        // tab (if any) AND re-click Show More, since a reload loses both.
+        Runnable reNavigate = () -> {
+            if (tabLocator != null) {
+                firstVisible(Wrapper.findWebElements(tabLocator)).ifPresent(Wrapper::clickWebElement);
+            }
+            scrollToBottom(baseSectionName + " - re-locating 'Show More' after reload");
+            forcedWait("scrolling to bottom before re-locating 'Show More' under '" + baseSectionName + "'", 2000);
+            Optional<WebElement> visibleShowMoreAgain = firstVisible(Wrapper.findWebElements(xpath_ShowMore));
+            if (visibleShowMoreAgain.isPresent()) {
+                WebElement showMoreAgainElement = visibleShowMoreAgain.get();
+                try {
+                    ((JavascriptExecutor) driver).executeScript(
+                            "arguments[0].scrollIntoView({block: 'center'});", showMoreAgainElement);
+                } catch (Exception e) {
+                    AllureReportUtil.info("Could not scroll to 'Show More' during re-navigation: " + e.getMessage());
+                }
+                Wrapper.clickWebElement(showMoreAgainElement);
+            }
+        };
+        captureFullSectionScreenshot(reportLabel, reNavigate);
+
+        String excelColumn = getExcelColumnForSection(baseSectionName, true);
+        if (excelColumn == null) {
+            AllureReportUtil.info(buildLogMessage(LOG_SKIPPED, reportLabel,
+                    "No matching Excel column mapping exists for menu option '" + baseSectionName
+                            + " Showmore', so this section was not validated."));
+            return;
+        }
+        validateSectionAndReport(reportLabel, excelColumn);
     }
 
-    public void captureTechSupportViewOnlyDataHRConnectDashboardItems(){
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_HRConnect));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_HRConnectTilesItems));
-        attachStepEvidence("Captured HR Connect dashboard items");
-        captureDashboardItems(xpath_HRConnectTilesItems, 2);
-        captureDashboardItems(xpath_HRConnectQuickActionItems, 1);
+    // =========================================================
+    // Orchestrator - reads "Approved Menu Options" and dynamically
+    // navigates/validates only the sections listed, in the order listed.
+    // =========================================================
+
+    public void Validate_All_Tiles() throws IOException {
+        overallSoftAssert = new SoftAssert();
+
+        String approvedMenuOptionsRaw = ExcelReader.getCellDataByKey(
+                EXCEL_PATH, SHEET_NAME, KEY_COLUMN_HEADER, currentScenarioTag, "Approved Menu Options");
+
+        if (approvedMenuOptionsRaw == null || approvedMenuOptionsRaw.trim().isEmpty()) {
+            AllureReportUtil.info(buildLogMessage(LOG_SKIPPED, "N/A",
+                    "'Approved Menu Options' is not configured in Excel for this test case, so no sections were validated."));
+            return;
+        }
+
+        List<String> menuOptions = Arrays.stream(approvedMenuOptionsRaw.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toList());
+
+        for (String menuOption : menuOptions) {
+            boolean isShowMore = menuOption.toLowerCase().endsWith("showmore");
+            String baseSectionName = isShowMore
+                    ? menuOption.substring(0, menuOption.length() - "showmore".length()).trim()
+                    : menuOption;
+
+            try {
+                if (isShowMore) {
+                    validateShowMoreForSection(baseSectionName, menuOption);
+                } else {
+                    navigateAndValidateSection(menuOption);
+                }
+            } catch (Exception e) {
+                // An exception while processing one section (stale tab, navigation
+                // timeout, etc.) must not stop the remaining sections in this
+                // scenario from being validated - record it and continue.
+                String comments = "An exception occurred while validating the '" + menuOption + "' section: " + e.getMessage();
+                AllureReportUtil.info(comments);
+                attachStepEvidence(comments);
+                overallSoftAssert.fail(comments);
+                TileValidationReportUtil.addResult(currentScenarioTag, menuOption, "-", "-", comments);
+            }
+        }
+
+        // Attach this scenario's rows as a table directly in the Allure report,
+        // in addition to the standalone TileValidationReport.xlsx covering all
+        // scenarios. Attached before assertAll() so it's still visible even
+        // when this scenario is about to be marked as failed.
+        List<TileValidationReportUtil.ResultRow> thisScenarioRows =
+                TileValidationReportUtil.getResultsForTestCase(currentScenarioTag);
+        String htmlTable = TileValidationReportUtil.buildHtmlTable(thisScenarioRows);
+        AllureReportUtil.attachHtml("Tile Validation Report (HTML) - " + currentScenarioTag, htmlTable);
+
+        String csvTable = TileValidationReportUtil.buildCsvTable(thisScenarioRows);
+        AllureReportUtil.attachCsv("Tile Validation Report - " + currentScenarioTag, csvTable);
+
+        overallSoftAssert.assertAll();
     }
-
-    public void captureTechSupportViewOnlyDataToolsDashboardItems(){
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_Tools));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_ToolsTilesItems));
-        attachStepEvidence("Captured Tools dashboard items");
-        captureDashboardItems(xpath_ToolsTilesItems, 3);
-        captureDashboardItems(xpath_ToolsQuickActionItems, 1);
-    }
-
-
-    //CE Treasury Full Population
-    //MyClientGroups
-    //xpath_MyClientGroupsTilesItems-->3
-    //xpath_ShowMore
-    //xpath_ShowMoreQuickActionItems-->9
-
-    //xpath_HRConnect
-    //xpath_HRConnectTilesItems-->6
-    //xpath_HRConnectQuickActionItems-->2
-
-    //xpath_Tools
-    //xpath_ToolsTilesItems-->3
-    //xpath_ToolsQuickActionItems-->1
-
-    public void captureTreasuryFullPopulationMyClientGroupsDashboardItems(){
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MyClientGroups));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_MyClientGroupsTilesItems));
-        attachStepEvidence("Captured My Client Groups dashboard items");
-        captureDashboardItems(xpath_MyClientGroupsTilesItems, 3);
-
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_ShowMore));
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_ShowMore));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_ShowMoreQuickActionItems));
-        attachStepEvidence("Captured additional My Client Groups Quick Action items after clicking Show More");
-        captureDashboardItems(xpath_ShowMoreQuickActionItems, 9);
-    }
-
-    public void captureTreasuryFullPopulationHRConnectDashboardItems(){
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_HRConnect));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_HRConnectTilesItems));
-        attachStepEvidence("Captured HR Connect dashboard items");
-        captureDashboardItems(xpath_HRConnectTilesItems, 6);
-        captureDashboardItems(xpath_HRConnectQuickActionItems, 2);
-    }
-
-    public void captureTreasuryFullPopulationToolsDashboardItems(){
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_Tools));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_ToolsTilesItems));
-        attachStepEvidence("Captured Tools dashboard items");
-        captureDashboardItems(xpath_ToolsTilesItems, 3);
-        captureDashboardItems(xpath_ToolsQuickActionItems, 1);
-    }
-
-    //CE Compensation Staff 
-    //MyClientGroups
-    //xpath_MyClientGroupsTilesItems-->4
-    //xpath_ShowMore
-    //xpath_ShowMoreQuickActionItems-->15
-
-    //xpath_HRConnect
-    //xpath_HRConnectTilesItems-->6
-    //xpath_HRConnectQuickActionItems-->2
-
-    //xpath_Tools
-    //xpath_ToolsTilesItems-->3
-    //xpath_ToolsQuickActionItems-->1
-
-    public void captureCompensationStaffMyClientGroupsDashboardItems(){
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MyClientGroups));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_MyClientGroupsTilesItems));
-        attachStepEvidence("Captured My Client Groups dashboard items");
-        captureDashboardItems(xpath_MyClientGroupsTilesItems, 4);
-
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_ShowMore));
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_ShowMore));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_ShowMoreQuickActionItems));
-        attachStepEvidence("Captured additional My Client Groups Quick Action items after clicking Show More");
-        captureDashboardItems(xpath_ShowMoreQuickActionItems, 15);
-    }
-
-    public void captureCompensationStaffHRConnectDashboardItems(){
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_HRConnect));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_HRConnectTilesItems));
-        attachStepEvidence("Captured HR Connect dashboard items");
-        captureDashboardItems(xpath_HRConnectTilesItems, 6);
-        captureDashboardItems(xpath_HRConnectQuickActionItems, 2);
-    }
-
-    public void captureCompensationStaffToolsDashboardItems(){
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_Tools));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_ToolsTilesItems));
-        attachStepEvidence("Captured Tools dashboard items");
-        captureDashboardItems(xpath_ToolsTilesItems, 3);
-        captureDashboardItems(xpath_ToolsQuickActionItems, 1);
-    }
-
-
-    //CE HR Employment Data View Only Excl Exec Retiree LEB
-    //MyClientGroups
-    //xpath_MyClientGroupsTilesItems-->3
-    //xpath_ShowMore
-    // By xpath_ScrollToCapture=By.xpath("//div[contains(@id,'all_quickactions_groupNode_workforce_management')]//a[contains(text(),'Employment Info')]");
-    //xpath_ShowMoreQuickActionItems-->4
-
-    //xpath_HRConnect
-    //xpath_HRConnectTilesItems-->6
-    //xpath_HRConnectQuickActionItems-->2
-
-    //xpath_Tools
-    //xpath_ToolsTilesItems-->3 
-    //xpath_ToolsQuickActionItems-->1
-
-    public void captureHRMEmploymentDataViewOnlyExclExecRetireeLEBMyClientGroupsDashboardItems(){
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MyClientGroups));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_MyClientGroupsTilesItems));
-        attachStepEvidence("Captured My Client Groups dashboard items");
-        captureDashboardItems(xpath_MyClientGroupsTilesItems, 3);
-
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_ShowMore));
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_ShowMore));
-        // Wrapper.scrollToElement(Wrapper.findWebElement(xpath_ScrollToCapture),"scrolling to Employment Info");
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_ShowMoreQuickActionItems));
-        attachStepEvidence("Captured additional My Client Groups Quick Action items after clicking Show More");
-        captureDashboardItems(xpath_ShowMoreQuickActionItems, 4);
-    }
-
-    public void captureHRMEmploymentDataViewOnlyExclExecRetireeLEBHRConnectDashboardItems(){
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_HRConnect));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_HRConnectTilesItems));
-        attachStepEvidence("Captured HR Connect dashboard items");
-        captureDashboardItems(xpath_HRConnectTilesItems, 6);
-        captureDashboardItems(xpath_HRConnectQuickActionItems, 2);
-    }
-
-    public void captureHRMEmploymentDataViewOnlyExclExecRetireeLEBToolsDashboardItems(){
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_Tools));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_ToolsTilesItems));
-        attachStepEvidence("Captured Tools dashboard items");
-        captureDashboardItems(xpath_ToolsTilesItems, 3);
-        captureDashboardItems(xpath_ToolsQuickActionItems, 1);
-    }
-
-    //CE HR Employment Data View Only Full Population
-    //MyClientGroups
-    //xpath_MyClientGroupsTilesItems-->2
-    //xpath_ShowMore
-    //xpath_ShowMoreQuickActionItems-->4
-
-    //xpath_HRConnect
-    //xpath_HRConnectTilesItems-->4
-    //xpath_HRConnectQuickActionItems-->1
-
-    //xpath_Tools
-    //xpath_ToolsTilesItems-->2
-    //xpath_ToolsQuickActionItems-->1
-
-    public void captureHRMEmploymentDataViewOnlyFullPopulationMyClientGroupsDashboardItems(){
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MyClientGroups));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_MyClientGroupsTilesItems));
-        attachStepEvidence("Captured My Client Groups dashboard items");
-        captureDashboardItems(xpath_MyClientGroupsTilesItems, 2);
-
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_ShowMore));
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_ShowMore));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_ShowMoreQuickActionItems));
-        attachStepEvidence("Captured additional My Client Groups Quick Action items after clicking Show More");
-        captureDashboardItems(xpath_ShowMoreQuickActionItems, 4);
-    }
-
-    public void captureHRMEmploymentDataViewOnlyFullPopulationHRConnectDashboardItems(){
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_HRConnect));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_HRConnectTilesItems));
-        attachStepEvidence("Captured HR Connect dashboard items");
-        captureDashboardItems(xpath_HRConnectTilesItems, 4);
-        captureDashboardItems(xpath_HRConnectQuickActionItems, 1);
-    }
-
-    public void captureHRMEmploymentDataViewOnlyFullPopulationToolsDashboardItems(){
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_Tools));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_ToolsTilesItems));
-        attachStepEvidence("Captured Tools dashboard items");
-        captureDashboardItems(xpath_ToolsTilesItems, 2);
-        captureDashboardItems(xpath_ToolsQuickActionItems, 1);
-    }
-
-    //CE HR Director Full Population
-    //MyClientGroups
-    //xpath_MyClientGroupsTilesItems-->4
-    //xpath_ShowMore
-    //xpath_ShowMoreQuickActionItems-->11
-
-    //xpath_HRConnect
-    //xpath_HRConnectTilesItems-->6
-    //xpath_HRConnectQuickActionItems-->3
-    By xpath_HRDirectorConnectQuickActionItems=By.xpath("//div[contains(@class,'quickactions')]//div[contains(@quickactioncategory,'groupNode')]//a[contains(@group,'HR')]");
-    //xpath_Tools
-    //xpath_ToolsTilesItems-->3
-    //xpath_ToolsQuickActionItems-->1
-
-    public void captureHRDirectorFullPopulationMyClientGroupsDashboardItems(){
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MyClientGroups));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_MyClientGroupsTilesItems));
-        attachStepEvidence("Captured My Client Groups dashboard items");
-        captureDashboardItems(xpath_MyClientGroupsTilesItems, 4);
-
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_ShowMore));
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_ShowMore));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_ShowMoreQuickActionItems));
-        attachStepEvidence("Captured additional My Client Groups Quick Action items after clicking Show More");
-        captureDashboardItems(xpath_ShowMoreQuickActionItems, 11);
-    }
-
-    public void captureHRDirectorFullPopulationHRConnectDashboardItems(){
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_HRConnect));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_HRConnectTilesItems));
-        attachStepEvidence("Captured HR Connect dashboard items");
-        captureDashboardItems(xpath_HRConnectTilesItems, 6);
-        captureDashboardItems(xpath_HRDirectorConnectQuickActionItems, 3);
-    }
-
-    public void captureHRDirectorFullPopulationToolsDashboardItems(){
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_Tools));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_ToolsTilesItems));
-        attachStepEvidence("Captured Tools dashboard items");
-        captureDashboardItems(xpath_ToolsTilesItems, 3);
-        captureDashboardItems(xpath_ToolsQuickActionItems, 1);
-    }
-
-
-    //CE HR Data View Only LI Data Analytics Full Population
-    //MyClientGroups
-    //xpath_MyClientGroupsTilesItems-->5
-    //xpath_ShowMore
-    //xpath_ShowMoreQuickActionItems-->7
-
-    //xpath_HRConnect
-    //xpath_HRConnectTilesItems-->5
-    //xpath_HRConnectQuickActionItems-->2
-
-    //xpath_Tools
-    //xpath_ToolsTilesItems-->3
-    //xpath_ToolsQuickActionItems-->1
-
-    public void captureHRDataViewOnlyLIDataAnalyticsFullPopulationMyClientGroupsDashboardItems(){
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MyClientGroups));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_MyClientGroupsTilesItems));
-        attachStepEvidence("Captured My Client Groups dashboard items");
-        captureDashboardItems(xpath_MyClientGroupsTilesItems, 5);
-
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_ShowMore));
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_ShowMore));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_ShowMoreQuickActionItems));
-        attachStepEvidence("Captured additional My Client Groups Quick Action items after clicking Show More");
-        captureDashboardItems(xpath_ShowMoreQuickActionItems, 7);
-    }
-
-    public void captureHRDataViewOnlyLIDataAnalyticsFullPopulationHRConnectDashboardItems(){
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_HRConnect));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_HRConnectTilesItems));
-        attachStepEvidence("Captured HR Connect dashboard items");
-        captureDashboardItems(xpath_HRConnectTilesItems, 5);
-        captureDashboardItems(xpath_HRConnectQuickActionItems, 2);
-    }
-
-    public void captureHRDataViewOnlyLIDataAnalyticsFullPopulationToolsDashboardItems(){
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_Tools));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_ToolsTilesItems));
-        attachStepEvidence("Captured Tools dashboard items");
-        captureDashboardItems(xpath_ToolsTilesItems, 3);
-        captureDashboardItems(xpath_ToolsQuickActionItems, 1);
-    }
-
-    //CE HR QA Compliance Full Population
-    //MyClientGroups
-    //xpath_MyClientGroupsTilesItems-->3
-    // xpath_ShowMore
-    //xpath_MyClientGroupsQuickActionItems-->5
-
-    //xpath_HRConnect
-    //xpath_HRConnectTilesItems-->5
-    //xpath_HRConnectQuickActionItems-->2
-
-    //xpath_Tools
-    //xpath_ToolsTilesItems-->3
-    //xpath_ToolsQuickActionItems-->1
-
-    public void captureHRQAComplianceFullPopulationMyClientGroupsDashboardItems(){
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MyClientGroups));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_MyClientGroupsTilesItems));
-        attachStepEvidence("Captured My Client Groups dashboard items");
-        captureDashboardItems(xpath_MyClientGroupsTilesItems, 3);
-
-        // Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_ShowMore));
-        // Wrapper.clickWebElement(Wrapper.findWebElement(xpath_ShowMore));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_MyClientGroupsQuickActionItems));
-        attachStepEvidence("Captured additional My Client Groups Quick Action items after clicking Show More");
-        captureDashboardItems(xpath_MyClientGroupsQuickActionItems, 5);
-    }
-
-    public void captureHRQAComplianceFullPopulationHRConnectDashboardItems(){
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_HRConnect));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_HRConnectTilesItems));
-        attachStepEvidence("Captured HR Connect dashboard items");
-        captureDashboardItems(xpath_HRConnectTilesItems, 5);
-        captureDashboardItems(xpath_HRConnectQuickActionItems, 2);
-    }
-
-    public void captureHRQAComplianceFullPopulationToolsDashboardItems(){
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_Tools));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_ToolsTilesItems));
-        attachStepEvidence("Captured Tools dashboard items");
-        captureDashboardItems(xpath_ToolsTilesItems, 3);
-        captureDashboardItems(xpath_ToolsQuickActionItems, 1);
-    }
-
-    //HR Production Support
-    //MyClientGroups
-    //xpath_MyClientGroupsTilesItems-->20
-    //xpath_ShowMore
-    By xpath_TransactionConfigurationAndAudit=By.xpath("//h4[contains(text(),'Transaction Configuration and Audit')]");//scroll to this element to capture all quick action items under My Client Groups for HR Production Support role
-    By xpath_NewPerson=By.xpath("//h4[contains(text(),'New Person')]");//scroll to this element to capture all quick action items under My Client Groups for HR Production Support role
-    By xpath_Employment=By.xpath("//h4[contains(text(),'Employment')]");//scroll to this element to capture all quick action items under My Client Groups for HR Production Support role
-    By xpath_Compensation=By.xpath("//h4[contains(text(),'Compensation')]");//scroll to this element to capture all quick action items under My Client Groups for HR Production Support role
-    By xpath_JourneysSetup=By.xpath("//h4[contains(text(),'Journeys Setup')]");//scroll to this element to capture all quick action items under My Client Groups for HR Production Support role
-    By xpath_Time=By.xpath("//h4[contains(text(),'Time')]");//scroll to this element to capture all quick action items under My Client Groups for HR Production Support role
-    By xpath_WorkforceStructures=By.xpath("//h4[contains(text(),'Workforce Structures')]");//scroll to this element to capture all quick action items under My Client Groups for HR Production Support role
-    By xpath_DocumentTypes=By.xpath("//h4[contains(text(),'Document Types')]");//scroll to this element to capture all quick action items under My Client Groups for HR Production Support role
-    By xpath_Talent=By.xpath("//h4[contains(text(),'Talent')]");//scroll to this element to capture all quick action items under My Client Groups for HR Production Support role
-    By xpath_Absences=By.xpath("//h4[contains(text(),'Absences')]");//scroll to this element to capture all quick action items under My Client Groups for HR Production Support role
-    By xpath_DataExchange=By.xpath("//h4[contains(text(),'Data Exchange')]");//scroll to this element to capture all quick action items under My Client Groups for HR Production Support role
-    By xpath_Payroll=By.xpath("//h4[contains(text(),'Payroll')]");//scroll to this element to capture all quick action items under My Client Groups for HR Production Support role
-    By xpath_MassUpdates=By.xpath("//h4[contains(text(),'Mass Updates')]");//scroll to this element to capture all quick action items under My Client Groups for HR Production Support role
-    By xpath_WorkforceScheduling=By.xpath("//h4[contains(text(),'Workforce Scheduling')]");//scroll to this element to capture all quick action items under My Client Groups for HR Production Support role
-    //xpath_ShowMoreQuickActionItems-->200
-
-    By xpath_BenefitsAdministration=By.xpath("//a[contains(text(),'Benefits Administration')]");
-    By xpath_BenefitsAdministrationTilesItems=By.xpath("//div[contains(@id,'yourapps_groupNode_benefits')]//a[contains(@class,'app')]");//3
-
-    By xpath_PartnerManagement=By.xpath("//a[contains(text(),'Partner Management')]");
-    By xpath_PartnerManagementTilesItems=By.xpath("//div[contains(@group,'groupNode_partner')]//a[contains(@class,'app')]");//1
-
-    By xpath_ClusterNextNavigation=By.xpath("//div[contains(@id,'clusters-right-nav')]/*[local-name()='svg']");
-
-    By xpath_Knowledge=By.xpath("//a[contains(@name,'groupNode_knowledge')]");
-    By xpath_KnowledgeTilesItems=By.xpath("//div[contains(@id,'yourapps_groupNode_knowledge')]//a[contains(@class,'app')]");//3
-    By xpath_KnowledgeQuickActionItems=By.xpath("//div[contains(@group,'groupNode_knowledge')]//a[contains(@target,'itemNode')]");//5
-
-    //xpath_HRConnect
-    //xpath_HRConnectTilesItems-->5
-    By xpath_HRProductionSupportConnectQuickActionItems=By.xpath("//div[contains(@id,'cluster_groupNode_HR_HelpDesk')]//a[contains(@group,'groupNode_HR') and not(contains(@id,'showmore'))]");//3
-
-    By xpath_MyEnterprise=By.xpath("//a[contains(text(),'My Enterprise')]");
-    By xpath_MyEnterpriseTilesItems=By.xpath("//div[contains(@id,'itemNode_MyEnterprise')]//a[contains(@class,'app')]");//4
-    By xpath_MyEnterpriseQuickActionItems=By.xpath("//div[contains(@group,'groupNode_MyEnterprise')]//a[contains(@group,'groupNode_MyEnterprise') and not(contains(@id,'showmore'))]");//1
-
-    //xpath_Tools
-    //xpath_ToolsTilesItems-->12
-    //xpath_ToolsQuickActionItems-->1
-
-    //xpath_ClusterNextNavigation
-
-    By xpath_Configuration=By.xpath("//a[contains(text(),'Configuration')]");
-    By xpath_ConfigurationTilesItems=By.xpath("//div[contains(@id,'yourapps_groupNode_configuration')]//a[contains(@class,'app')]");//2
-    
-    public void captureHRProductionSupportMyClientGroupsDashboardItems(){
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MyClientGroups));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_MyClientGroupsTilesItems));
-        attachStepEvidence("Captured My Client Groups dashboard items");
-        captureDashboardItems(xpath_MyClientGroupsTilesItems, 20);
-
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_ShowMore));
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_ShowMore));
-
-        // Scroll to each section to ensure all quick action items are loaded for capture
-        Wrapper.scrollToElement(Wrapper.findWebElement(xpath_TransactionConfigurationAndAudit), "scrolling to Transaction Configuration and Audit");
-        attachStepEvidence("Scrolled to Transaction Configuration and Audit section to load all quick action items under My Client Groups for HR Production Support role");
-        Wrapper.scrollToElement(Wrapper.findWebElement(xpath_NewPerson), "scrolling to New Person");
-        attachStepEvidence("Scrolled to New Person section to load all quick action items under My Client Groups for HR Production Support role");
-        Wrapper.scrollToElement(Wrapper.findWebElement(xpath_Employment), "scrolling to Employment");
-        attachStepEvidence("Scrolled to Employment section to load all quick action items under My Client Groups for HR Production Support role");
-        Wrapper.scrollToElement(Wrapper.findWebElement(xpath_Compensation), "scrolling to Compensation");
-        attachStepEvidence("Scrolled to Compensation section to load all quick action items under My Client Groups for HR Production Support role");
-        Wrapper.scrollToElement(Wrapper.findWebElement(xpath_JourneysSetup), "scrolling to Journeys Setup");
-        attachStepEvidence("Scrolled to Journeys Setup section to load all quick action items under My Client Groups for HR Production Support role");
-        Wrapper.scrollToElement(Wrapper.findWebElement(xpath_Time), "scrolling to Time");
-        attachStepEvidence("Scrolled to Time section to load all quick action items under My Client Groups for HR Production Support role");
-        Wrapper.scrollToElement(Wrapper.findWebElement(xpath_WorkforceStructures), "scrolling to Workforce Structures");
-        attachStepEvidence("Scrolled to Workforce Structures section to load all quick action items under My Client Groups for HR Production Support role");
-        Wrapper.scrollToElement(Wrapper.findWebElement(xpath_DocumentTypes), "scrolling to Document Types");
-        attachStepEvidence("Scrolled to Document Types section to load all quick action items under My Client Groups for HR Production Support role");
-        Wrapper.scrollToElement(Wrapper.findWebElement(xpath_Talent), "scrolling to Talent");
-        attachStepEvidence("Scrolled to Talent section to load all quick action items under My Client Groups for HR Production Support role");
-        Wrapper.scrollToElement(Wrapper.findWebElement(xpath_Absences), "scrolling to Absences");
-        attachStepEvidence("Scrolled to Absences section to load all quick action items under My Client Groups for HR Production Support role");
-        Wrapper.scrollToElement(Wrapper.findWebElement(xpath_DataExchange), "scrolling to Data Exchange");
-        attachStepEvidence("Scrolled to Data Exchange section to load all quick action items under My Client Groups for HR Production Support role");
-        Wrapper.scrollToElement(Wrapper.findWebElement(xpath_Payroll), "scrolling to Payroll");
-        attachStepEvidence("Scrolled to Payroll section to load all quick action items under My Client Groups for HR Production Support role");
-        Wrapper.scrollToElement(Wrapper.findWebElement(xpath_MassUpdates), "scrolling to Mass Updates");
-        attachStepEvidence("Scrolled to Mass Updates section to load all quick action items under My Client Groups for HR Production Support role");
-        Wrapper.scrollToElement(Wrapper.findWebElement(xpath_WorkforceScheduling), "scrolling to Workforce Scheduling");
-        attachStepEvidence("Scrolled to Workforce Scheduling section to load all quick action items under My Client Groups for HR Production Support role");
-
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_ShowMoreQuickActionItems));
-        attachStepEvidence("Captured additional My Client Groups Quick Action items after clicking Show More and scrolling through all sections");
-        captureDashboardItems(xpath_ShowMoreQuickActionItems, 200);
-    }
-
-    public void captureHRProductionSupportBenefitsAdministrationDashboardItems(){
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_BenefitsAdministration));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_BenefitsAdministrationTilesItems));
-        attachStepEvidence("Captured Benefits Administration dashboard items");
-        captureDashboardItems(xpath_BenefitsAdministrationTilesItems, 3);
-    }
-
-    public void captureHRProductionSupportPartnerManagementDashboardItems(){
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_PartnerManagement));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_PartnerManagementTilesItems));
-        attachStepEvidence("Captured Partner Management dashboard items");
-        captureDashboardItems(xpath_PartnerManagementTilesItems, 1);
-    }
-
-    public void clusterNextNavigation(){
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_ClusterNextNavigation));
-        // attachStepEvidence("Clicked on Cluster Next Navigation to capture dashboard items under Cluster Next Navigation for HR Production Support role");
-    }
-
-    public void captureHRProductionSupportKnowledgeDashboardItems() throws Exception{
-        clusterNextNavigation();
-        Thread.sleep(2000);// Adding a short sleep to allow the dashboard to load after clicking Cluster Next Navigation
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_Knowledge));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_KnowledgeTilesItems));
-        attachStepEvidence("Captured Knowledge dashboard items");
-        captureDashboardItems(xpath_KnowledgeTilesItems, 3);
-        captureDashboardItems(xpath_KnowledgeQuickActionItems, 5);
-    }
-
-    public void captureHRProductionSupportHRConnectDashboardItems(){
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_HRConnect));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_HRConnectTilesItems));
-        attachStepEvidence("Captured HR Connect dashboard items");
-        captureDashboardItems(xpath_HRConnectTilesItems, 5);
-        captureDashboardItems(xpath_HRProductionSupportConnectQuickActionItems, 3);
-    }
-
-    public void captureHRProductionSupportMyEnterpriseDashboardItems(){
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_MyEnterprise));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_MyEnterpriseTilesItems));
-        attachStepEvidence("Captured My Enterprise dashboard items");
-        captureDashboardItems(xpath_MyEnterpriseTilesItems, 4);
-        captureDashboardItems(xpath_MyEnterpriseQuickActionItems, 1);
-    }
-
-    public void captureHRProductionSupportToolsDashboardItems(){
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_Tools));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_ToolsTilesItems));
-        attachStepEvidence("Captured Tools dashboard items");
-        captureDashboardItems(xpath_ToolsTilesItems, 12);
-        captureDashboardItems(xpath_ToolsQuickActionItems, 1);
-    }
-
-    public void captureHRProductionSupportConfigurationDashboardItems() throws Exception{
-        // Thread.sleep(2000);
-        // clusterNextNavigation();
-        Thread.sleep(2000);// Adding a short sleep to allow the dashboard to load after clicking Cluster Next Navigation
-        clusterNextNavigation();
-        Wrapper.clickWebElement(Wrapper.findWebElement(xpath_Configuration));
-        Wrapper.getWait().until(ExpectedConditions.visibilityOfAllElementsLocatedBy(xpath_ConfigurationTilesItems));
-        attachStepEvidence("Captured Configuration dashboard items");
-        captureDashboardItems(xpath_ConfigurationTilesItems, 2);
-    }
-
-
-
-
-
 }
