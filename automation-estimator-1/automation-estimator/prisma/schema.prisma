@@ -1,0 +1,265 @@
+// Automation Estimator - data model
+// Run `npx prisma migrate dev --name init` after setting DATABASE_URL in .env
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Tenancy & auth
+// ---------------------------------------------------------------------------
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+
+  users      User[]
+  projects   Project[]
+  rateCards  RateCard[]
+}
+
+model User {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  name           String?
+  passwordHash   String
+  role           UserRole @default(MEMBER)
+  createdAt      DateTime @default(now())
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  actualLogs ActualLog[]
+  reviews    Flow[]       @relation("FlowReviewedBy")
+}
+
+enum UserRole {
+  ADMIN
+  MEMBER
+}
+
+// ---------------------------------------------------------------------------
+// Projects & uploads
+// ---------------------------------------------------------------------------
+
+model Project {
+  id              String    @id @default(cuid())
+  name            String
+  oracleModule    String? // e.g. "Oracle HCM - Accounts Payable"
+  description     String?
+  targetDeadline  DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  uploads   Upload[]
+  flows     Flow[]
+  estimates Estimate[]
+  actuals   ActualLog[]
+
+  @@index([organizationId])
+}
+
+model Upload {
+  id         String       @id @default(cuid())
+  fileName   String
+  mimeType   String
+  sizeBytes  Int
+  status     UploadStatus @default(PENDING)
+  errorMessage String?
+  createdAt  DateTime     @default(now())
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  flows Flow[]
+
+  @@index([projectId])
+}
+
+enum UploadStatus {
+  PENDING
+  PARSING
+  EXTRACTING
+  DONE
+  FAILED
+}
+
+// ---------------------------------------------------------------------------
+// Flows (Test Flow Register rows) - the AI-extracted / manually entered scope
+// ---------------------------------------------------------------------------
+
+model Flow {
+  id        String @id @default(cuid())
+  testScriptId String?
+  module    String
+  subProcess String?
+
+  // rubric signals
+  steps               Int
+  personas            Int
+  integration         Boolean @default(false)
+  aiNonDeterministic  Boolean @default(false)
+  approvalWorkflow    Boolean @default(false)
+  emailNotification   Boolean @default(false)
+  otbiReport          Boolean @default(false)
+  externalUI          Boolean @default(false)
+  fileDocHandling     Boolean @default(false)
+  bulkAction          Boolean @default(false)
+  configOnly          Boolean @default(false)
+
+  // computed (denormalized for fast listing/filtering; recomputed on every edit)
+  complexityScore Int
+  complexityBand  String // "Simple" | "Medium" | "Complex"
+
+  // country scope - list of ADDITIONAL countries beyond the home/base country
+  countries Json @default("[]") // CountryEntry[] = { country: string, variant: "DATA_ONLY" | "LOGIC_DIFFERENT" }[]
+
+  // scope decision
+  inScopeOverride Boolean? // null = use the AI/rubric default; true/false = human override
+  inScopeFinal    Boolean  // denormalized final decision, recomputed on every edit
+
+  // AI extraction metadata
+  sourceUploadId    String?
+  sourceUpload      Upload? @relation(fields: [sourceUploadId], references: [id])
+  extractionRationale String?
+  extractionConfidence Float? // 0..1
+  recommendedTool     String?
+  recommendedToolRationale String?
+
+  reviewStatus ReviewStatus @default(PENDING)
+  reviewedById String?
+  reviewedBy   User?   @relation("FlowReviewedBy", fields: [reviewedById], references: [id])
+  reviewedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  actualLogs ActualLog[]
+
+  @@index([projectId])
+  @@index([projectId, reviewStatus])
+}
+
+enum ReviewStatus {
+  PENDING   // needs human attention (low AI confidence, AI-content flag, logic-different country, etc.)
+  APPROVED  // human confirmed as-is
+  EDITED    // human changed something and it's considered settled
+}
+
+// ---------------------------------------------------------------------------
+// Rate cards - one per (organization, tool), versioned
+// ---------------------------------------------------------------------------
+
+model RateCard {
+  id         String   @id @default(cuid())
+  tool       String // "Selenium" | "UiPath" | "Playwright" | "Tosca" | custom
+  version    Int      @default(1)
+  isActive   Boolean  @default(true)
+  confidence String // "verified" | "partial" | "placeholder"
+  sourceNote String?
+
+  setupHours          Float
+  hoursPerComponent   Float
+  reusePct            Float
+  designScriptsPerDay Json // { Simple, Medium, Complex }
+  execScriptsPerDay   Json // { Simple, Medium, Complex }
+  pmPct               Float
+  contingencyPct      Float
+  countryDataOverheadHours Float
+  countryLogicDeltaPct     Float
+  serialFloorWeeks    Float
+  team                Json // { manager, senior, tester, sme }
+  licenseModel        String?
+
+  createdAt DateTime @default(now())
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  revisions RateCardRevision[]
+  estimates Estimate[]
+
+  @@index([organizationId, tool, isActive])
+}
+
+// Audit trail every time a rate card changes, especially via calibration
+model RateCardRevision {
+  id         String   @id @default(cuid())
+  rateCardId String
+  rateCard   RateCard @relation(fields: [rateCardId], references: [id], onDelete: Cascade)
+
+  changeType String // "manual_edit" | "calibration_proposal" | "calibration_applied"
+  before     Json
+  after      Json
+  note       String?
+  approvedBy String? // userId, null while pending approval
+
+  createdAt DateTime @default(now())
+
+  @@index([rateCardId])
+}
+
+// ---------------------------------------------------------------------------
+// Estimates - a saved snapshot (so you can compare v1 vs v2 as scope changes)
+// ---------------------------------------------------------------------------
+
+model Estimate {
+  id        String @id @default(cuid())
+  label     String @default("Estimate")
+
+  tool       String
+  rateCardId String
+  rateCard   RateCard @relation(fields: [rateCardId], references: [id])
+
+  componentsRequired Int
+
+  // resourcing choice used for the headline duration shown for this snapshot
+  engineersUsed Float
+
+  // computed breakdown, stored so history doesn't drift if rate cards change later
+  breakdown Json // full ProjectEffort shape from the engine
+
+  createdAt DateTime @default(now())
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+// ---------------------------------------------------------------------------
+// Actuals - logged once delivery starts, feeds calibration
+// ---------------------------------------------------------------------------
+
+model ActualLog {
+  id     String @id @default(cuid())
+  activity String // "KT" | "Setup" | "ComponentLibrary" | "Design" | "Execution" | "PM" | "Contingency" | "Other"
+  tool     String
+  actualHours Float
+  note        String?
+  loggedAt    DateTime @default(now())
+
+  flowId String?
+  flow   Flow?   @relation(fields: [flowId], references: [id])
+
+  loggedById String
+  loggedBy   User   @relation(fields: [loggedById], references: [id])
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([tool, activity])
+}

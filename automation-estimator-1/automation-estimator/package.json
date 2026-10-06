@@ -1,0 +1,57 @@
+{
+  "name": "automation-estimator",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI-driven test automation effort estimation across multiple automation tools (Selenium, UiPath, Playwright, Tosca), with a live resource/duration planner and rate-card calibration from real project actuals.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "verify:engine": "node --experimental-strip-types scripts/verify-engine.ts",
+    "verify:calibration": "node --experimental-strip-types scripts/verify-calibration.ts",
+    "verify": "npm run verify:engine && npm run verify:calibration",
+    "db:migrate": "prisma migrate dev",
+    "db:generate": "prisma generate",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:studio": "prisma studio"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "latest",
+    "@auth/prisma-adapter": "^2.7.0",
+    "@prisma/client": "^6.1.0",
+    "bcryptjs": "^2.4.3",
+    "csv-parse": "^5.5.6",
+    "mammoth": "^1.8.0",
+    "next": "^15.5.0",
+    "next-auth": "^5.0.0-beta.25",
+    "pdf-parse": "^1.1.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "recharts": "^2.13.0",
+    "xlsx": "^0.18.5",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^22.10.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "prisma": "^6.1.0",
+    "tailwindcss": "^3.4.15",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  }
+}
